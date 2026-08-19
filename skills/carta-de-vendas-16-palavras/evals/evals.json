@@ -1,0 +1,26 @@
+{
+  "skill_name": "carta-de-vendas-16-palavras",
+  "evals": [
+    {
+      "id": 1,
+      "eval_name": "eval-planejamento-vsl",
+      "prompt": "preciso estruturar o script de um VSL pra vender um software de gestão financeira pra pequenos empresários que ficam no aperto no fim do mês. o diferencial dele é que ele usa IA pra avisar com antecedência quando vai faltar caixa. me ajuda a planejar a estrutura inteira antes de eu escrever o roteiro final?",
+      "expected_output": "Define o One Belief (nova oportunidade = alerta de caixa por IA, desejo = tranquilidade financeira/parar de ser pego de surpresa, mecanismo = a IA), depois mapeia rapidamente as 10 perguntas com o ângulo de cada resposta antes de partir para texto final, e só então organiza a estrutura do VSL na sequência das perguntas.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "eval_name": "eval-nao-sei-comecar",
+      "prompt": "vou lançar um curso de culinária vegana pra iniciantes e preciso escrever a carta de vendas mas não sei nem por onde começar, fico travado numa página em branco",
+      "expected_output": "Não pula direto pra escrever texto final; conduz o usuário pelo processo de planejamento (one belief + rascunho das 10 perguntas em 1-2 linhas cada) antes de qualquer copy final, perguntando informações que faltam sobre produto/persona quando necessário.",
+      "files": []
+    },
+    {
+      "id": 3,
+      "eval_name": "eval-diagnostico",
+      "prompt": "escrevi essa abertura de carta de vendas e não está convertendo nada, só 0.5% de conversão. dá uma olhada: \"Nosso curso de investimentos ensina tudo que você precisa saber sobre a bolsa de valores. Se você não está investindo bem, provavelmente é porque não entende o suficiente sobre o mercado. Matricule-se agora e aprenda com especialistas.\"",
+      "expected_output": "Diagnostica usando o framework: identifica que a Pergunta 4 está sendo violada (culpa o leitor por 'não entender o suficiente' em vez de tirar a culpa dele), que não há Pergunta 1 (nenhuma novidade/diferenciação), Pergunta 2 fraca (promessa genérica 'tudo que você precisa saber'), ausência de prova (Pergunta 3) e de urgência real (Pergunta 6). Propõe reescrita aplicando o framework.",
+      "files": []
+    }
+  ]
+}
