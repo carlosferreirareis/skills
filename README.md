@@ -56,6 +56,7 @@ Dica: use a skill `skill-creator` do Claude Code para gerar, revisar e testar (`
 |---|---|
 | [`copywriter-brasileiro`](skills/copywriter-brasileiro/) | Copywriting baseado em "O Livro de Ouro do Copywriter Brasileiro" (Junior WM): psicologia da persuasão, persona, benefícios, headline, banco de palavras e estrutura de carta de vendas. |
 | [`carta-de-vendas-16-palavras`](skills/carta-de-vendas-16-palavras/) | Framework "One Belief + Ten Questions" de "A Carta de Vendas de 16 Palavras" (Evaldo Albuquerque), para planejar e estruturar cartas de vendas/VSLs do zero e diagnosticar peças que não convertem. |
+| [`headlines-lendarias`](skills/headlines-lendarias/) | Swipe file de 101 headlines reais (Ogilvy, Schwartz, Caples, Halbert, Hopkins), organizadas em 15 padrões estruturais reutilizáveis, para gerar e variar headlines a partir de fórmulas comprovadas. |
 
 ### Forks
 

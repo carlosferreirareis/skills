@@ -1,0 +1,26 @@
+{
+  "skill_name": "headlines-lendarias",
+  "evals": [
+    {
+      "id": 1,
+      "eval_name": "eval-headlines-curso",
+      "prompt": "me dá umas opções de headline pra um anúncio de um curso online de finanças pessoais voltado pra quem já tentou economizar de várias formas e não consegue. o diferencial é um método de 15 minutos por semana, bem simples.",
+      "expected_output": "Gera 3-5 headlines usando padrões variados e nomeados do swipe file (ex: how-to, facilidade extrema, choque de incredulidade), reconstruindo a estrutura com os fatos reais do curso (15 min/semana) em vez de copiar frases do swipe file trocando palavras.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "eval_name": "eval-sem-angulo",
+      "prompt": "vou anunciar um serviço de organização de armários (personal organizer) e não faço ideia de que ângulo usar pra headline, me ajuda?",
+      "expected_output": "Antes de gerar headlines, busca entender a persona/emoção acessível e o que há de real na oferta; propõe 2-3 padrões diferentes do swipe file com exemplos concretos para esse nicho específico.",
+      "files": []
+    },
+    {
+      "id": 3,
+      "eval_name": "eval-produto-fisico",
+      "prompt": "preciso de 5 headlines para um anúncio de um creme anti-idade. tenho um estudo clínico mostrando que 78% das mulheres viram redução de rugas em 21 dias.",
+      "expected_output": "Usa o dado real (78%, 21 dias) para aplicar padrões como prova/autoridade e número específico, evitando inflar ou arredondar o número, e evita cair nos erros listados em 'o que evitar' (promessa vazia, segredo genérico).",
+      "files": []
+    }
+  ]
+}
