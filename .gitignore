@@ -3,3 +3,6 @@ node_modules/
 __pycache__/
 *.pyc
 .env
+
+# Workspaces de avaliação do skill-creator (scratch, não fazem parte da skill)
+*-workspace/

@@ -1,0 +1,26 @@
+{
+  "skill_name": "copywriter-brasileiro",
+  "evals": [
+    {
+      "id": 1,
+      "eval_name": "eval-headline-bullets",
+      "prompt": "estou lançando um curso online de inglês pra adultos que têm vergonha de abrir a boca e falar, mesmo sabendo gramática. preciso de uma headline forte e uns 3 bullets de benefício pra usar num anúncio no instagram.",
+      "expected_output": "Headline curta e concreta com pelo menos 3 dos 4 U's (utilidade, urgência, exclusividade, ultra-especificidade), focada no benefício real (perder a vergonha/falar com confiança) e não na característica (aulas de gramática). 3 bullets no formato benefício, não característica, idealmente usando algum dos formatos de bullet do livro.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "eval_name": "eval-carta-completa",
+      "prompt": "preciso de uma carta de vendas completa pra um infoproduto de emagrecimento voltado pra mulheres acima de 40 anos que já tentaram de tudo e não conseguem perder peso por causa da queda hormonal da menopausa. quero headline, um lead bom, alguns bullets de benefício, e um fechamento com PS.",
+      "expected_output": "Peça estruturada seguindo headline -> lead -> bullets -> fechamento -> PS, com benefícios profundos (não characteristics disfarçadas), tom íntimo/empático, lead que crie conexão emocional real com a dor específica da persona (não genérica), falso fechamento antes do CTA final, PS reforçando urgência/bônus.",
+      "files": []
+    },
+    {
+      "id": 3,
+      "eval_name": "eval-revisao-headline",
+      "prompt": "dá uma olhada nessa headline e me fala o que tá errado e como melhorar: \"Conheça nosso revolucionário sistema de gestão financeira com Inteligência Artificial\"",
+      "expected_output": "Diagnóstico claro de que a headline fala de característica/produto (sistema com IA) e não de benefício real pra persona; identifica que é genérica/clichê e não passa no teste de curto período de atenção do cérebro reptiliano; propõe 2-3 headlines alternativas focadas em benefício concreto usando os 4 U's.",
+      "files": []
+    }
+  ]
+}
