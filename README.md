@@ -64,6 +64,10 @@ Dica: use a skill `skill-creator` do Claude Code para gerar, revisar e testar (`
 |---|---|---|
 | _(nenhuma ainda)_ | | |
 
+## Exemplos de prompts
+
+- [`skills/exemplo-prompt-anuncios.md`](skills/exemplo-prompt-anuncios.md) — prompt genérico com placeholders para gerar anúncios de conversão (headlines, carrosséis, texto de anúncio, roteiros) combinando as skills `copywriter-brasileiro`, `carta-de-vendas-16-palavras` e `headlines-lendarias` para qualquer negócio/produto.
+
 ## Uso nos projetos
 
 Para usar uma skill de um projeto, copie a pasta da skill (`skills/<nome>/` ou `forks/<nome>/`) para o diretório de skills do projeto de destino (ex.: `.claude/skills/`), ou consulte a documentação do Claude Code sobre como referenciar skills externas.
