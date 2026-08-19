@@ -1,0 +1,1325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Eval Review</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600&family=Lora:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js" integrity="sha384-EnyY0/GSHQGSxSgMwaIPzSESbqoOLSexfnSMN2AP+39Ckmn92stwABZynq1JyzdT" crossorigin="anonymous"></script>
+  <style>
+    :root {
+      --bg: #faf9f5;
+      --surface: #ffffff;
+      --border: #e8e6dc;
+      --text: #141413;
+      --text-muted: #b0aea5;
+      --accent: #d97757;
+      --accent-hover: #c4613f;
+      --green: #788c5d;
+      --green-bg: #eef2e8;
+      --red: #c44;
+      --red-bg: #fceaea;
+      --header-bg: #141413;
+      --header-text: #faf9f5;
+      --radius: 6px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Lora', Georgia, serif;
+      background: var(--bg);
+      color: var(--text);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ---- Header ---- */
+    .header {
+      background: var(--header-bg);
+      color: var(--header-text);
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-shrink: 0;
+    }
+    .header h1 {
+      font-family: 'Poppins', sans-serif;
+      font-size: 1.25rem;
+      font-weight: 600;
+    }
+    .header .instructions {
+      font-size: 0.8rem;
+      opacity: 0.7;
+      margin-top: 0.25rem;
+    }
+    .header .progress {
+      font-size: 0.875rem;
+      opacity: 0.8;
+      text-align: right;
+    }
+
+    /* ---- Main content ---- */
+    .main {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1.5rem 2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    /* ---- Sections ---- */
+    .section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      flex-shrink: 0;
+    }
+    .section-header {
+      font-family: 'Poppins', sans-serif;
+      padding: 0.75rem 1rem;
+      font-size: 0.75rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border);
+      background: var(--bg);
+    }
+    .section-body {
+      padding: 1rem;
+    }
+
+    /* ---- Config badge ---- */
+    .config-badge {
+      display: inline-block;
+      padding: 0.2rem 0.625rem;
+      border-radius: 9999px;
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.6875rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      margin-left: 0.75rem;
+      vertical-align: middle;
+    }
+    .config-badge.config-primary {
+      background: rgba(33, 150, 243, 0.12);
+      color: #1976d2;
+    }
+    .config-badge.config-baseline {
+      background: rgba(255, 193, 7, 0.15);
+      color: #f57f17;
+    }
+
+    /* ---- Prompt ---- */
+    .prompt-text {
+      white-space: pre-wrap;
+      font-size: 0.9375rem;
+      line-height: 1.6;
+    }
+
+    /* ---- Outputs ---- */
+    .output-file {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .output-file + .output-file {
+      margin-top: 1rem;
+    }
+    .output-file-header {
+      padding: 0.5rem 0.75rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      font-family: 'SF Mono', SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .output-file-header .dl-btn {
+      font-size: 0.7rem;
+      color: var(--accent);
+      text-decoration: none;
+      cursor: pointer;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-weight: 500;
+      opacity: 0.8;
+    }
+    .output-file-header .dl-btn:hover {
+      opacity: 1;
+      text-decoration: underline;
+    }
+    .output-file-content {
+      padding: 0.75rem;
+      overflow-x: auto;
+    }
+    .output-file-content pre {
+      font-size: 0.8125rem;
+      line-height: 1.5;
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-family: 'SF Mono', SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace;
+    }
+    .output-file-content img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 4px;
+    }
+    .output-file-content iframe {
+      width: 100%;
+      height: 600px;
+      border: none;
+    }
+    .output-file-content table {
+      border-collapse: collapse;
+      font-size: 0.8125rem;
+      width: 100%;
+    }
+    .output-file-content table td,
+    .output-file-content table th {
+      border: 1px solid var(--border);
+      padding: 0.375rem 0.5rem;
+      text-align: left;
+    }
+    .output-file-content table th {
+      background: var(--bg);
+      font-weight: 600;
+    }
+    .output-file-content .download-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--accent);
+      text-decoration: none;
+      font-size: 0.875rem;
+      cursor: pointer;
+    }
+    .output-file-content .download-link:hover {
+      background: var(--border);
+    }
+    .empty-state {
+      color: var(--text-muted);
+      font-style: italic;
+      padding: 2rem;
+      text-align: center;
+    }
+
+    /* ---- Feedback ---- */
+    .prev-feedback {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 0.625rem 0.75rem;
+      margin-top: 0.75rem;
+      font-size: 0.8125rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+    .prev-feedback-label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 0.25rem;
+      color: var(--text-muted);
+    }
+    .feedback-textarea {
+      width: 100%;
+      min-height: 100px;
+      padding: 0.75rem;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      font-family: inherit;
+      font-size: 0.9375rem;
+      line-height: 1.5;
+      resize: vertical;
+      color: var(--text);
+    }
+    .feedback-textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+    .feedback-status {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 0.5rem;
+      min-height: 1.1em;
+    }
+
+    /* ---- Grades (collapsible) ---- */
+    .grades-toggle {
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+      user-select: none;
+    }
+    .grades-toggle:hover {
+      color: var(--accent);
+    }
+    .grades-toggle .arrow {
+      margin-right: 0.5rem;
+      transition: transform 0.15s;
+      font-size: 0.75rem;
+    }
+    .grades-toggle .arrow.open {
+      transform: rotate(90deg);
+    }
+    .grades-content {
+      display: none;
+      margin-top: 0.75rem;
+    }
+    .grades-content.open {
+      display: block;
+    }
+    .grades-summary {
+      font-size: 0.875rem;
+      margin-bottom: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .grade-badge {
+      display: inline-block;
+      padding: 0.125rem 0.5rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .grade-pass { background: var(--green-bg); color: var(--green); }
+    .grade-fail { background: var(--red-bg); color: var(--red); }
+    .assertion-list {
+      list-style: none;
+    }
+    .assertion-item {
+      padding: 0.625rem 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.8125rem;
+    }
+    .assertion-item:last-child { border-bottom: none; }
+    .assertion-status {
+      font-weight: 600;
+      margin-right: 0.5rem;
+    }
+    .assertion-status.pass { color: var(--green); }
+    .assertion-status.fail { color: var(--red); }
+    .assertion-evidence {
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      margin-top: 0.25rem;
+      padding-left: 1.5rem;
+    }
+
+    /* ---- View tabs ---- */
+    .view-tabs {
+      display: flex;
+      gap: 0;
+      padding: 0 2rem;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .view-tab {
+      font-family: 'Poppins', sans-serif;
+      padding: 0.625rem 1.25rem;
+      font-size: 0.8125rem;
+      font-weight: 500;
+      cursor: pointer;
+      border: none;
+      background: none;
+      color: var(--text-muted);
+      border-bottom: 2px solid transparent;
+      transition: all 0.15s;
+    }
+    .view-tab:hover { color: var(--text); }
+    .view-tab.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+    }
+    .view-panel { display: none; }
+    .view-panel.active { display: flex; flex-direction: column; flex: 1; overflow: hidden; }
+
+    /* ---- Benchmark view ---- */
+    .benchmark-view {
+      padding: 1.5rem 2rem;
+      overflow-y: auto;
+      flex: 1;
+    }
+    .benchmark-table {
+      border-collapse: collapse;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      font-size: 0.8125rem;
+      width: 100%;
+      margin-bottom: 1.5rem;
+    }
+    .benchmark-table th, .benchmark-table td {
+      padding: 0.625rem 0.75rem;
+      text-align: left;
+      border: 1px solid var(--border);
+    }
+    .benchmark-table th {
+      font-family: 'Poppins', sans-serif;
+      background: var(--header-bg);
+      color: var(--header-text);
+      font-weight: 500;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .benchmark-table tr:hover { background: var(--bg); }
+    .benchmark-table tr.benchmark-row-with { background: rgba(33, 150, 243, 0.06); }
+    .benchmark-table tr.benchmark-row-without { background: rgba(255, 193, 7, 0.06); }
+    .benchmark-table tr.benchmark-row-with:hover { background: rgba(33, 150, 243, 0.12); }
+    .benchmark-table tr.benchmark-row-without:hover { background: rgba(255, 193, 7, 0.12); }
+    .benchmark-table tr.benchmark-row-avg { font-weight: 600; border-top: 2px solid var(--border); }
+    .benchmark-table tr.benchmark-row-avg.benchmark-row-with { background: rgba(33, 150, 243, 0.12); }
+    .benchmark-table tr.benchmark-row-avg.benchmark-row-without { background: rgba(255, 193, 7, 0.12); }
+    .benchmark-delta-positive { color: var(--green); font-weight: 600; }
+    .benchmark-delta-negative { color: var(--red); font-weight: 600; }
+    .benchmark-notes {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem;
+    }
+    .benchmark-notes h3 {
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.875rem;
+      margin-bottom: 0.75rem;
+    }
+    .benchmark-notes ul {
+      list-style: disc;
+      padding-left: 1.25rem;
+    }
+    .benchmark-notes li {
+      font-size: 0.8125rem;
+      line-height: 1.6;
+      margin-bottom: 0.375rem;
+    }
+    .benchmark-empty {
+      color: var(--text-muted);
+      font-style: italic;
+      text-align: center;
+      padding: 3rem;
+    }
+
+    /* ---- Navigation ---- */
+    .nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 2rem;
+      border-top: 1px solid var(--border);
+      background: var(--surface);
+      flex-shrink: 0;
+    }
+    .nav-btn {
+      font-family: 'Poppins', sans-serif;
+      padding: 0.5rem 1.25rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      cursor: pointer;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--text);
+      transition: all 0.15s;
+    }
+    .nav-btn:hover:not(:disabled) {
+      background: var(--bg);
+      border-color: var(--text-muted);
+    }
+    .nav-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+    .done-btn {
+      font-family: 'Poppins', sans-serif;
+      padding: 0.5rem 1.5rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      color: var(--text);
+      cursor: pointer;
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: all 0.15s;
+    }
+    .done-btn:hover {
+      background: var(--bg);
+      border-color: var(--text-muted);
+    }
+    .done-btn.ready {
+      border: none;
+      background: var(--accent);
+      color: white;
+      font-weight: 600;
+    }
+    .done-btn.ready:hover {
+      background: var(--accent-hover);
+    }
+    /* ---- Done overlay ---- */
+    .done-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 100;
+      justify-content: center;
+      align-items: center;
+    }
+    .done-overlay.visible {
+      display: flex;
+    }
+    .done-card {
+      background: var(--surface);
+      border-radius: 12px;
+      padding: 2rem 3rem;
+      text-align: center;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      max-width: 500px;
+    }
+    .done-card h2 {
+      font-size: 1.5rem;
+      margin-bottom: 0.5rem;
+    }
+    .done-card p {
+      color: var(--text-muted);
+      margin-bottom: 1.5rem;
+      line-height: 1.5;
+    }
+    .done-card .btn-row {
+      display: flex;
+      gap: 0.5rem;
+      justify-content: center;
+    }
+    .done-card button {
+      padding: 0.5rem 1.25rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      cursor: pointer;
+      font-size: 0.875rem;
+    }
+    .done-card button:hover {
+      background: var(--bg);
+    }
+    /* ---- Toast ---- */
+    .toast {
+      position: fixed;
+      bottom: 5rem;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--header-bg);
+      color: var(--header-text);
+      padding: 0.625rem 1.25rem;
+      border-radius: var(--radius);
+      font-size: 0.875rem;
+      opacity: 0;
+      transition: opacity 0.3s;
+      pointer-events: none;
+      z-index: 200;
+    }
+    .toast.visible {
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+  <div id="app" style="height:100vh; display:flex; flex-direction:column;">
+    <div class="header">
+      <div>
+        <h1>Eval Review: <span id="skill-name"></span></h1>
+        <div class="instructions">Review each output and leave feedback below. Navigate with arrow keys or buttons. When done, copy feedback and paste into Claude Code.</div>
+      </div>
+      <div class="progress" id="progress"></div>
+    </div>
+
+    <!-- View tabs (only shown when benchmark data exists) -->
+    <div class="view-tabs" id="view-tabs" style="display:none;">
+      <button class="view-tab active" onclick="switchView('outputs')">Outputs</button>
+      <button class="view-tab" onclick="switchView('benchmark')">Benchmark</button>
+    </div>
+
+    <!-- Outputs panel (qualitative review) -->
+    <div class="view-panel active" id="panel-outputs">
+    <div class="main">
+      <!-- Prompt -->
+      <div class="section">
+        <div class="section-header">Prompt <span class="config-badge" id="config-badge" style="display:none;"></span></div>
+        <div class="section-body">
+          <div class="prompt-text" id="prompt-text"></div>
+        </div>
+      </div>
+
+      <!-- Outputs -->
+      <div class="section">
+        <div class="section-header">Output</div>
+        <div class="section-body" id="outputs-body">
+          <div class="empty-state">No output files found</div>
+        </div>
+      </div>
+
+      <!-- Previous Output (collapsible) -->
+      <div class="section" id="prev-outputs-section" style="display:none;">
+        <div class="section-header">
+          <div class="grades-toggle" onclick="togglePrevOutputs()">
+            <span class="arrow" id="prev-outputs-arrow">&#9654;</span>
+            Previous Output
+          </div>
+        </div>
+        <div class="grades-content" id="prev-outputs-content"></div>
+      </div>
+
+      <!-- Grades (collapsible) -->
+      <div class="section" id="grades-section" style="display:none;">
+        <div class="section-header">
+          <div class="grades-toggle" onclick="toggleGrades()">
+            <span class="arrow" id="grades-arrow">&#9654;</span>
+            Formal Grades
+          </div>
+        </div>
+        <div class="grades-content" id="grades-content"></div>
+      </div>
+
+      <!-- Feedback -->
+      <div class="section">
+        <div class="section-header">Your Feedback</div>
+        <div class="section-body">
+          <textarea
+            class="feedback-textarea"
+            id="feedback"
+            placeholder="What do you think of this output? Any issues, suggestions, or things that look great?"
+          ></textarea>
+          <div class="feedback-status" id="feedback-status"></div>
+          <div class="prev-feedback" id="prev-feedback" style="display:none;">
+            <div class="prev-feedback-label">Previous feedback</div>
+            <div id="prev-feedback-text"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="nav" id="outputs-nav">
+      <button class="nav-btn" id="prev-btn" onclick="navigate(-1)">&#8592; Previous</button>
+      <button class="done-btn" id="done-btn" onclick="showDoneDialog()">Submit All Reviews</button>
+      <button class="nav-btn" id="next-btn" onclick="navigate(1)">Next &#8594;</button>
+    </div>
+    </div><!-- end panel-outputs -->
+
+    <!-- Benchmark panel (quantitative stats) -->
+    <div class="view-panel" id="panel-benchmark">
+      <div class="benchmark-view" id="benchmark-content">
+        <div class="benchmark-empty">No benchmark data available. Run a benchmark to see quantitative results here.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Done overlay -->
+  <div class="done-overlay" id="done-overlay">
+    <div class="done-card">
+      <h2>Review Complete</h2>
+      <p>Your feedback has been saved. Go back to your Claude Code session and tell Claude you're done reviewing.</p>
+      <div class="btn-row">
+        <button onclick="closeDoneDialog()">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // ---- Embedded data (injected by generate_review.py) ----
+    const EMBEDDED_DATA = {"skill_name": "copywriter-brasileiro", "runs": [{"id": "eval-headline-bullets-with_skill", "prompt": "estou lan\u00e7ando um curso online de ingl\u00eas pra adultos que t\u00eam vergonha de abrir a boca e falar, mesmo sabendo gram\u00e1tica. preciso de uma headline forte e uns 3 bullets de benef\u00edcio pra usar num an\u00fancio no instagram.", "eval_id": 1, "outputs": [{"name": "output.md", "type": "text", "content": "# Headline + bullets para o an\u00fancio\n\nAntes de mais nada, uma observa\u00e7\u00e3o r\u00e1pida sobre a persona que usei como base (voc\u00ea me diz se quer ajustar): adulto que j\u00e1 estudou ingl\u00eas \u2014 \u00e0s vezes anos \u2014, sabe regra de gram\u00e1tica de cor, mas trava, gagueja ou \"d\u00e1 branco\" na hora de falar de verdade: numa call de trabalho, numa entrevista, num interc\u00e2mbio, na frente de quem fala fluente. O problema real n\u00e3o \u00e9 conhecimento, \u00e9 vergonha e medo de errar na frente dos outros. \u00c9 nisso que a headline e os bullets miram.\n\n## Headline principal\n\n**\"Chega de vergonha pra falar ingl\u00eas (mesmo sabendo gram\u00e1tica)\"**\n\nPor que funciona: nomeia a dor exata que essa pessoa j\u00e1 sente mas raramente v\u00ea algu\u00e9m dizer em voz alta \u2014 \"eu sei a mat\u00e9ria e ainda assim travo\" \u2014, o que gera identifica\u00e7\u00e3o imediata no scroll. E j\u00e1 deixa claro, na primeira leitura, pra quem \u00e9 a oferta (quem sabe gram\u00e1tica, n\u00e3o quem est\u00e1 come\u00e7ando do zero) \u2014 isso filtra a pessoa certa e funciona como diferencial, j\u00e1 que a maioria dos cursos de ingl\u00eas vende \"aprenda gram\u00e1tica\", n\u00e3o \"destrave a fala\".\n\n## Duas varia\u00e7\u00f5es pra testar (A/B)\n\n1. **\"Voc\u00ea sabe a gram\u00e1tica. Falar \u00e9 que trava, n\u00e9?\"** \u2014 d\u00e1 voz ao que a pessoa j\u00e1 pensa sobre si mesma; tom de conversa entre amigos.\n2. **\"Seu ingl\u00eas n\u00e3o trava na cabe\u00e7a. Trava na boca.\"** \u2014 contraste direto, bom pra quem responde melhor a uma afirma\u00e7\u00e3o mais seca e de efeito.\n\n## Bullets de benef\u00edcio\n\n- Voc\u00ea para de \"dar branco\" e gaguejar no meio da frase \u2014 mesmo numa reuni\u00e3o de trabalho, numa entrevista ou do lado de algu\u00e9m que fala fluente.\n- Voc\u00ea responde na hora, sem passar a frase cinco vezes na cabe\u00e7a antes de abrir a boca \u2014 sem aquele n\u00f3 na garganta te segurando.\n- Toda a gram\u00e1tica que voc\u00ea j\u00e1 estudou por anos finalmente vira conversa de verdade \u2014 sem medo de errar, sem vergonha de ser ouvido.\n\n## B\u00f4nus: fechamento pro an\u00fancio (n\u00e3o pedido, mas ajuda a fechar o texto)\n\nSe quiser um CTA curto pra puxar pro clique: **\"Chega de estudar ingl\u00eas sozinho no papel. Vem falar.\"**\n\n## Observa\u00e7\u00f5es r\u00e1pidas (revis\u00e3o contra os erros cl\u00e1ssicos)\n\n- Nenhum bullet descreve o m\u00e9todo em si (aula gravada, n\u00famero de m\u00f3dulos etc.) \u2014 todos entregam o que a pessoa ganha, que \u00e9 o teste que importa.\n- A headline n\u00e3o promete nada que o an\u00fancio (ou o curso) n\u00e3o deva entregar de fato \u2014 vale confirmar que o curso realmente foca em pr\u00e1tica de fala e n\u00e3o \u00e9 \"mais uma aula de gram\u00e1tica disfar\u00e7ada\", sen\u00e3o ela cai no erro de \"headline que engana\".\n- Se quiser, me conta mais sobre o formato do curso (ao vivo, gravado, dura\u00e7\u00e3o, pre\u00e7o) que eu aperto ainda mais os bullets com um detalhe ultra-espec\u00edfico \u2014 isso costuma converter mais que benef\u00edcio gen\u00e9rico.\n"}], "grading": null}, {"id": "eval-headline-bullets-without_skill", "prompt": "estou lan\u00e7ando um curso online de ingl\u00eas pra adultos que t\u00eam vergonha de abrir a boca e falar, mesmo sabendo gram\u00e1tica. preciso de uma headline forte e uns 3 bullets de benef\u00edcio pra usar num an\u00fancio no instagram.", "eval_id": 1, "outputs": [{"name": "output.md", "type": "text", "content": "# Headline e bullets para an\u00fancio no Instagram\n\n## Headline\n\n**\"Voc\u00ea j\u00e1 sabe toda a gram\u00e1tica. O que falta \u00e9 coragem pra abrir a boca.\"**\n\nOutras op\u00e7\u00f5es, caso queira testar varia\u00e7\u00f5es (A/B):\n\n- \"Decorou regras, memorizou verbos, passou em prova... mas trava na hora de falar? A gente resolve isso.\"\n- \"Chega de saber ingl\u00eas s\u00f3 na teoria.\"\n- \"Seu ingl\u00eas n\u00e3o \u00e9 ruim. \u00c9 a vergonha que est\u00e1 falando mais alto.\"\n\n## Bullets de benef\u00edcio\n\n- **Perca o medo de errar na frente dos outros** \u2014 pratique conversas reais num ambiente seguro, sem julgamento, feito pra quem trava antes mesmo de come\u00e7ar a frase.\n\n- **Destrave a fala em semanas, n\u00e3o em anos** \u2014 m\u00e9todo focado em conversa\u00e7\u00e3o de verdade, n\u00e3o em mais regras de gram\u00e1tica que voc\u00ea j\u00e1 domina e nunca usa.\n\n- **Ganhe confian\u00e7a pra falar em qualquer situa\u00e7\u00e3o** \u2014 de uma reuni\u00e3o de trabalho a uma viagem, sem gaguejar, sem pedir desculpa e sem ensaiar a frase dez vezes na cabe\u00e7a antes de dizer.\n\n---\n\n### Observa\u00e7\u00e3o r\u00e1pida\nSe quiser, posso ajustar o tom (mais emocional, mais direto, mais \"provocador\") ou adaptar para outro formato, tipo Stories ou Reels. Tamb\u00e9m d\u00e1 pra criar 2-3 varia\u00e7\u00f5es completas de headline + bullets para voc\u00ea testar qual converte melhor.\n"}], "grading": null}, {"id": "eval-carta-completa-with_skill", "prompt": "preciso de uma carta de vendas completa pra um infoproduto de emagrecimento voltado pra mulheres acima de 40 anos que j\u00e1 tentaram de tudo e n\u00e3o conseguem perder peso por causa da queda hormonal da menopausa. quero headline, um lead bom, alguns bullets de benef\u00edcio, e um fechamento com PS.", "eval_id": 2, "outputs": [{"name": "output.md", "type": "text", "content": "# Carta de vendas \u2014 infoproduto de emagrecimento para mulheres 40+ na menopausa\n\n## Antes da carta: as decis\u00f5es que tomei\n\nVoc\u00ea n\u00e3o me deu persona detalhada nem nome/pre\u00e7o do produto, ent\u00e3o segui a skill at\u00e9 onde dava sem travar o trabalho \u2014 mapeei uma persona plaus\u00edvel a partir do que voc\u00ea descreveu e assumi alguns dados de produto, todos marcados em **[colchetes]** pra voc\u00ea trocar pelos reais.\n\n**Persona assumida:** mulher, 44\u201358 anos, classe B/C, j\u00e1 foi ativa e \"de boa forma\" antes dos 40. Hoje treina e come \"certo\" (na vis\u00e3o dela) e mesmo assim n\u00e3o emagrece ou ainda engorda \u2014 especialmente na barriga. J\u00e1 tentou low carb, jejum intermitente, corte de calorias, personal trainer, shakes. Ouviu de m\u00e9dico ou nutricionista gen\u00e9rico \"\u00e9 a idade, \u00e9 a menopause, aceita\". Sente que o corpo \"virou as costas\" pra ela. Tem vergonha de roupa que n\u00e3o fecha, evita foto, evita reuni\u00e3o de fam\u00edlia, sente que perdeu identidade e desejo. Culpa a si mesma por \"falta de for\u00e7a de vontade\" \u2014 cren\u00e7a que a atormenta mais que o peso em si.\n\n**N\u00facleo emocional de compra:** n\u00e3o \u00e9 vaidade rasa \u2014 \u00e9 a dor de n\u00e3o se reconhecer mais, o medo de \"estar assim pro resto da vida\", a raiva de ter feito tudo certo e n\u00e3o ter funcionado, e o al\u00edvio enorme de descobrir que o problema n\u00e3o \u00e9 car\u00e1ter, \u00e9 bioqu\u00edmica.\n\n**Inimigo comum personificado:** o mito de \"for\u00e7a de vontade\" + a dieta gen\u00e9rica de revista/influencer que ignora horm\u00f4nio + o m\u00e9dico apressado que despacha com \"\u00e9 a idade\".\n\n**USP / Big Idea:** depois dos 40 o corpo muda de regras (queda de estrog\u00eanio \u2192 mais resist\u00eancia \u00e0 insulina, mais cortisol, menos massa muscular) \u2014 por isso \"comer menos, treinar mais\" para de funcionar. O produto n\u00e3o \u00e9 mais uma dieta de restri\u00e7\u00e3o: \u00e9 um protocolo desenhado para essa nova bioqu\u00edmica.\n\n**Produto assumido:** infoproduto digital (curso/protocolo em m\u00f3dulos), nome de trabalho **Protocolo Rein\u00edcio Hormonal**. Troque pelo nome real.\n\nOnde n\u00e3o dava pra inventar sem enganar ningu\u00e9m \u2014 pre\u00e7o, prazo de garantia, b\u00f4nus espec\u00edficos, depoimentos reais \u2014 deixei em colchetes ou marcados como placeholder. **Depoimentos precisam ser reais**; os que aparecem abaixo s\u00e3o s\u00f3 o formato/estrutura para voc\u00ea preencher com casos verdadeiros, nunca invente resultado de cliente. E como o tema envolve sa\u00fade/menopausa, vale revisar as alega\u00e7\u00f5es com um profissional de sa\u00fade antes de publicar, por quest\u00e3o regulat\u00f3ria (CONAR/ANVISA) \u2014 evitei prometer cura ou tratar sintoma cl\u00ednico, mantive tudo no campo de h\u00e1bito, energia e composi\u00e7\u00e3o corporal.\n\n---\n\n# A CARTA\n\n## HEADLINE\n\n# N\u00e3o \u00e9 pregui\u00e7a. \u00c9 horm\u00f4nio.\n\n### E, pela primeira vez, algu\u00e9m vai te explicar exatamente o que fazer a respeito.\n\n*(Headline curta e direta \u2014 confirma uma suspeita que ela j\u00e1 carrega [\"n\u00e3o deve ser s\u00f3 falta de for\u00e7a de vontade...\"] e usa utilidade + exclusividade. A sub-headline entrega urg\u00eancia e ultra-especificidade sem precisar inflar a linha principal.)*\n\n---\n\n## DECK COPY\n\n**Revelado nesta p\u00e1gina:**\n\n- O motivo real (e nada a ver com disciplina) pelo qual seu corpo agora guarda gordura mesmo comendo a mesma coisa que comia aos 35 \u2014 e por que praticamente nenhuma dieta popular fala sobre isso.\n- O erro cl\u00e1ssico que a maioria das mulheres comete ao tentar emagrecer depois dos 40 \u2014 e que trava o metabolismo ainda mais fundo.\n- Como reorganizar 3 h\u00e1bitos simples do seu dia para trabalhar **a favor** da sua nova bioqu\u00edmica hormonal, em vez de lutar contra ela igual antes.\n- Por que \"comer menos e treinar mais\" foi a f\u00f3rmula certa at\u00e9 os 30 e poucos \u2014 e por que insistir nela agora s\u00f3 est\u00e1 te deixando mais cansada, sem resultado nenhum pra mostrar.\n\n---\n\n## LEAD\n\nDuas da manh\u00e3. Voc\u00ea acorda de novo \u2014 suada, o cora\u00e7\u00e3o um pouco acelerado \u2014 e fica ali, olhando pro teto, contando quanto tempo falta pro despertador tocar.\n\nAmanh\u00e3 \u00e9 dia de academia. De novo. Mais um dia de salada sem sal no almo\u00e7o, mais uma vez contando calorias que, no fim do m\u00eas, n\u00e3o mudam nada no n\u00famero da balan\u00e7a.\n\nVoc\u00ea j\u00e1 cortou o p\u00e3o. J\u00e1 cortou o vinho de sexta-feira. J\u00e1 tentou o jejum intermitente, o low carb, aquele shake que a colega do trabalho jurou de p\u00e9 junto que \"derreteu\" cinco quilos em um m\u00eas.\n\nE, mesmo assim, aquela cal\u00e7a que fechava tranquilamente h\u00e1 tr\u00eas anos continua l\u00e1, dobrada no fundo da gaveta \u2014 um lembrete di\u00e1rio de um corpo que parece ter virado as costas pra voc\u00ea.\n\nSe mais uma pessoa chegar perto e disser \"\u00e9 s\u00f3 ter mais for\u00e7a de vontade\", vai ser dif\u00edcil n\u00e3o revidar.\n\nPorque voc\u00ea **tem** for\u00e7a de vontade. Voc\u00ea faz tudo certo \u2014 o mesmo certo que funcionava perfeitamente aos 30 e poucos. S\u00f3 que agora n\u00e3o funciona mais. E ningu\u00e9m te explicou por qu\u00ea.\n\nAqui est\u00e1 a parte que a maioria dos m\u00e9dicos n\u00e3o tem os quinze minutos de consulta pra te contar, e que a ind\u00fastria da dieta gen\u00e9rica prefere que voc\u00ea nunca descubra: **seu corpo n\u00e3o est\u00e1 mais operando pelas mesmas regras.**\n\nA queda do estrog\u00eanio na perimenopausa e na menopausa muda, literalmente, onde e como voc\u00ea estoca gordura, como seu corpo reage \u00e0 insulina, e o quanto de massa muscular \u2014 seu maior queimador natural de calorias \u2014 voc\u00ea perde s\u00f3 por ficar parada um pouco mais.\n\n\"Comer menos, se mexer mais\": a f\u00f3rmula que resolveu tudo a vida inteira deixou de fazer sentido pro seu corpo de agora. N\u00e3o porque voc\u00ea fez alguma coisa errada. Porque a receita mudou, e ningu\u00e9m te entregou a nova.\n\n\u00c9 exatamente essa receita nova que est\u00e1 nas pr\u00f3ximas linhas.\n\n---\n\n## CORPO DA CARTA\n\n### Por que \"comer menos, treinar mais\" parou de funcionar\n\nN\u00e3o \u00e9 for\u00e7a de vontade. \u00c9 bioqu\u00edmica \u2014 e ela muda em tr\u00eas frentes ao mesmo tempo, geralmente sem avisar:\n\n- **Errado!** Voc\u00ea acha que precisa comer cada vez menos pra emagrecer depois dos 40? Errado \u2014 e \u00e9 exatamente esse tipo de restri\u00e7\u00e3o que deixa seu metabolismo ainda mais lento e seu corpo ainda mais resistente a soltar gordura.\n- A queda do estrog\u00eanio aumenta a resist\u00eancia \u00e0 insulina \u2014 seu corpo passa a estocar gordura com mais facilidade, principalmente na regi\u00e3o do abd\u00f4men, mesmo comendo a mesma quantidade de antes.\n- O cortisol (horm\u00f4nio do estresse) fica mais alto e mais dif\u00edcil de baixar \u2014 e cortisol alto \u00e9 sin\u00f4nimo de gordura abdominal instalada e sono ruim, os dois travando um ao outro.\n- Voc\u00ea perde massa muscular naturalmente com a idade \u2014 e cada quilo de m\u00fasculo a menos \u00e9 menos calorias queimadas em repouso, todos os dias, mesmo dormindo.\n\nTr\u00eas engrenagens diferentes, girando ao mesmo tempo contra voc\u00ea. Nenhuma dieta de revista, nenhum aplicativo de contagem de caloria gen\u00e9rico foi desenhado pensando nelas.\n\n### O que muda quando voc\u00ea para de lutar contra o pr\u00f3prio corpo\n\nFoi pensando nisso \u2014 e depois de anos vendo mulheres inteligentes, disciplinadas, se culpando por um problema que nunca foi delas \u2014 que nasceu o **Protocolo Rein\u00edcio Hormonal [nome do produto]**.\n\nN\u00e3o \u00e9 mais uma dieta de restri\u00e7\u00e3o. \u00c9 um protocolo constru\u00eddo especificamente para o corpo de quem est\u00e1 na perimenopausa ou na menopausa \u2014 pensado pra trabalhar a favor da sua bioqu\u00edmica atual, n\u00e3o contra ela.\n\nAlguns dos benef\u00edcios de aplicar o m\u00e9todo:\n\n- **A verdade sobre a barriga que \"n\u00e3o sai de jeito nenhum\":** por que ela foi o primeiro lugar a mudar de forma nos \u00faltimos anos \u2014 e o ajuste espec\u00edfico (n\u00e3o \u00e9 fazer mais abdominal) que faz diferen\u00e7a real a\u00ed.\n- **Se** voc\u00ea reservar 15 minutos por dia para aplicar os 3 ajustes do protocolo, seu corpo come\u00e7a a responder de um jeito que voc\u00ea n\u00e3o via h\u00e1 anos \u2014 sem cortar refei\u00e7\u00e3o, sem passar fome.\n- **3 h\u00e1bitos simples** que trabalham a favor da sua nova bioqu\u00edmica hormonal \u2014 e nenhum deles \u00e9 \"corte o carboidrato\" ou \"jejue 16 horas\".\n- O motivo pouco falado pelo qual excesso de cardio pode estar sabotando seu resultado depois dos 40 \u2014 e o tipo de movimento que faz o efeito contr\u00e1rio.\n- Voc\u00ea sente que precisa de uma soneca inadi\u00e1vel todo santo dia \u00e0 tarde? Isso tem explica\u00e7\u00e3o hormonal \u2014 e tem solu\u00e7\u00e3o pr\u00e1tica dentro do protocolo.\n- O ajuste de 5 minutos na primeira refei\u00e7\u00e3o do dia que muda sua resposta \u00e0 insulina nas horas seguintes (a maioria das mulheres, sem saber, faz exatamente o oposto disso).\n- Como recuperar energia pra terminar o dia sem aquele cansa\u00e7o arrastado \u2014 e voltar a se olhar no espelho reconhecendo o pr\u00f3prio corpo, sem depender de for\u00e7a de vontade sobre-humana.\n- O que nunca fazer nas duas primeiras semanas de qualquer mudan\u00e7a de h\u00e1bito depois dos 40 (\u00e9 o erro que faz quase toda tentativa anterior fracassar cedo demais).\n\n### Voc\u00ea n\u00e3o est\u00e1 sozinha nisso\n\nHoje, **[X mil] mulheres** j\u00e1 passaram pelo Protocolo Rein\u00edcio Hormonal \u2014 a maioria chegou exatamente como voc\u00ea: achando que tinha \"relaxado\" ou \"perdido o pique\", at\u00e9 descobrir que o corpo s\u00f3 estava pedindo um jeito novo de ser tratado.\n\n> *\"[Espa\u00e7o para depoimento real de cliente \u2014 nome, idade, resultado espec\u00edfico e verific\u00e1vel. N\u00e3o preencher com caso fict\u00edcio.]\"*\n> \u2014 **[Nome], [idade], [cidade]**\n\n> *\"[Espa\u00e7o para depoimento real de cliente \u2014 foco na transforma\u00e7\u00e3o de energia/autoestima, n\u00e3o s\u00f3 no n\u00famero da balan\u00e7a.]\"*\n> \u2014 **[Nome], [idade], [cidade]**\n\n---\n\n## A OFERTA\n\nDentro do Protocolo Rein\u00edcio Hormonal voc\u00ea recebe:\n\n- **[M\u00f3dulo 1 \u2014 nome]:** o mapa completo da sua nova bioqu\u00edmica, em linguagem simples, sem jarg\u00e3o de nutricionista.\n- **[M\u00f3dulo 2 \u2014 nome]:** os 3 ajustes de rotina que recolocam seu metabolismo a favor.\n- **[M\u00f3dulo 3 \u2014 nome]:** o plano de movimento certo pra essa fase (sem academia de duas horas, sem cardio em excesso).\n- **B\u00f4nus 1 \u2014 [nome]:** [descri\u00e7\u00e3o \u2014 o \"1\u00b0C que falta\" pra virar resultado, n\u00e3o um brinde qualquer].\n- **B\u00f4nus 2 \u2014 [nome]:** [descri\u00e7\u00e3o].\n- **B\u00f4nus 3 \u2014 [nome], por tempo limitado para quem entrar at\u00e9 [data/condi\u00e7\u00e3o]:** [descri\u00e7\u00e3o].\n\n**\"N\u00e3o tenho tempo pra mais um programa.\"** Entendo \u2014 \u00e9 a primeira coisa que toda mulher que j\u00e1 tentou de tudo pensa. Por isso o protocolo foi desenhado em ajustes de minutos, n\u00e3o em horas de academia ou preparo de marmita.\n\n**\"J\u00e1 tentei de tudo e nada funcionou.\"** Provavelmente porque tudo que voc\u00ea tentou foi pensado pra um corpo de 25 anos. Esse aqui n\u00e3o \u00e9.\n\nDe **[R$ pre\u00e7o de ancoragem]** \u2014 somando os 3 m\u00f3dulos e os b\u00f4nus \u2014 por apenas **[R$ pre\u00e7o final]**, em at\u00e9 **[condi\u00e7\u00e3o de parcelamento]**.\n\n**Garantia:** voc\u00ea tem **7 dias** garantidos por lei para pedir reembolso total, sem justificativa \u2014 e, al\u00e9m disso, **[estender para X dias, se aplic\u00e1vel]** para testar o protocolo na pr\u00e1tica antes de decidir se fica. Se n\u00e3o sentir diferen\u00e7a, \u00e9 s\u00f3 pedir de volta, sem burocracia.\n\n---\n\n## FECHAMENTO\n\nImagine daqui a 60 dias: voc\u00ea abre a gaveta, pega aquela cal\u00e7a que estava l\u00e1 dobrada, e ela fecha sem dificuldade. Voc\u00ea chega numa reuni\u00e3o de fam\u00edlia sem pensar duas vezes na roupa que vai usar. Voc\u00ea acorda descansada, sem aquele cansa\u00e7o que virou rotina.\n\nNada disso \u00e9 sobre ter mais disciplina do que voc\u00ea j\u00e1 tem. \u00c9 sobre finalmente trabalhar a favor do corpo que voc\u00ea tem hoje \u2014 n\u00e3o do corpo que voc\u00ea tinha aos 30.\n\nE antes de voc\u00ea fechar esta p\u00e1gina: lembre que os b\u00f4nus **[B\u00f4nus 3]** ficam dispon\u00edveis s\u00f3 para quem entrar at\u00e9 **[data]** \u2014 depois disso, saem da oferta.\n\n**[QUERO COME\u00c7AR MEU REIN\u00cdCIO HORMONAL \u2192]**\n\nClique no bot\u00e3o acima, escolha a forma de pagamento e o acesso \u00e9 liberado na hora \u2014 direto no seu e-mail, para come\u00e7ar ainda hoje.\n\nCom carinho,\n**[Nome da criadora do m\u00e9todo]**\n\n---\n\n**PS:** Toda vez que voc\u00ea adia essa decis\u00e3o, o corpo continua operando pelas regras antigas \u2014 as que j\u00e1 provaram, nos \u00faltimos meses, que n\u00e3o funcionam mais pra voc\u00ea. Comece hoje pelos **7 dias de garantia total**: se em uma semana voc\u00ea n\u00e3o sentir diferen\u00e7a nenhuma, \u00e9 s\u00f3 pedir seu dinheiro de volta, sem perguntas. O \u00fanico risco aqui \u00e9 continuar exatamente do jeito que est\u00e1.\n"}], "grading": null}, {"id": "eval-carta-completa-without_skill", "prompt": "preciso de uma carta de vendas completa pra um infoproduto de emagrecimento voltado pra mulheres acima de 40 anos que j\u00e1 tentaram de tudo e n\u00e3o conseguem perder peso por causa da queda hormonal da menopausa. quero headline, um lead bom, alguns bullets de benef\u00edcio, e um fechamento com PS.", "eval_id": 2, "outputs": [{"name": "output.md", "type": "text", "content": "# Carta de Vendas \u2014 Infoproduto de Emagrecimento (Mulheres 40+)\n\n---\n\n## HEADLINE\n\n**Depois dos 40, seu corpo n\u00e3o est\u00e1 \"pregui\u00e7oso\" \u2014 ele est\u00e1 hormonalmente sabotado. Descubra o m\u00e9todo que j\u00e1 ajudou milhares de mulheres a voltarem a emagrecer mesmo na menopausa, sem dietas malucas e sem passar fome.**\n\n---\n\n## LEAD\n\nSe voc\u00ea \u00e9 uma mulher acima dos 40 anos e sente que seu corpo simplesmente parou de responder a tudo o que voc\u00ea tenta \u2014 pode parar de se culpar agora mesmo.\n\nN\u00e3o \u00e9 falta de for\u00e7a de vontade.\nN\u00e3o \u00e9 \"pregui\u00e7a\".\nN\u00e3o \u00e9 porque voc\u00ea \"comeu demais\" no fim de semana.\n\n\u00c9 que, a partir da perimenopausa e da menopausa, seus horm\u00f4nios mudam completamente as regras do jogo. A queda de estrog\u00eanio altera onde e como seu corpo estoca gordura (principalmente na regi\u00e3o do abd\u00f4men), reduz sua massa muscular, desacelera seu metabolismo e ainda mexe com seu sono, sua fome e seus n\u00edveis de estresse \u2014 uma combina\u00e7\u00e3o perfeita para o ponteiro da balan\u00e7a travar, n\u00e3o importa o quanto voc\u00ea se esforce.\n\nO problema \u00e9 que 99% das dietas e treinos por a\u00ed foram criados pensando no corpo de uma mulher de 25 anos, com o horm\u00f4nio funcionando a todo vapor. Por isso elas funcionam por duas semanas... e depois param de funcionar. E voc\u00ea volta a se sentir frustrada, cansada e sem esperan\u00e7a.\n\nEu sei como isso pesa. Porque n\u00e3o \u00e9 s\u00f3 sobre o peso na balan\u00e7a \u2014 \u00e9 sobre se olhar no espelho e n\u00e3o se reconhecer, \u00e9 sobre a roupa que n\u00e3o veste mais, \u00e9 sobre a energia que sumiu, \u00e9 sobre sentir que seu corpo virou um estranho.\n\nMas aqui est\u00e1 a boa not\u00edcia: **quando voc\u00ea entende como o seu corpo funciona depois dos 40 \u2014 e para de tentar usar estrat\u00e9gias de vinte anos atr\u00e1s \u2014 o emagrecimento volta a acontecer.** N\u00e3o da noite para o dia, e n\u00e3o com milagre. Mas de forma real, sustent\u00e1vel, e finalmente alinhada com o que o seu corpo precisa nesta fase da vida.\n\n\u00c9 exatamente isso que voc\u00ea vai aprender aqui dentro.\n\n---\n\n## O QUE VOC\u00ca VAI CONSEGUIR\n\n- **Entender de uma vez por todas por que as dietas restritivas pioram (e n\u00e3o melhoram) o seu emagrecimento** depois dos 40 \u2014 e o que fazer no lugar delas\n- **Reequilibrar seu metabolismo mesmo com a queda hormonal da menopausa**, usando estrat\u00e9gias de alimenta\u00e7\u00e3o pensadas especificamente para esta fase\n- **Reduzir a gordura abdominal teimosa** que apareceu do nada e n\u00e3o sai nem com exerc\u00edcio\n- **Recuperar energia e disposi\u00e7\u00e3o** para acordar sem aquele cansa\u00e7o arrastado que virou rotina\n- **Dormir melhor** \u2014 porque sono ruim sabota qualquer tentativa de emagrecer, e a menopausa mexe direto com isso\n- **Comer sem culpa e sem contar calorie obsessivamente**, com um m\u00e9todo simples que cabe na vida real, no trabalho, na fam\u00edlia, na correria do dia a dia\n- **Preservar (e recuperar) massa muscular**, o verdadeiro segredo para acelerar o metabolismo depois dos 40 \u2014 muito mais importante do que \"malhar mais\"\n- **Driblar as ondas de calor, a irritabilidade e a ansiedade** que fazem voc\u00ea buscar comida como al\u00edvio emocional\n- **Vestir novamente as roupas que voc\u00ea guardou no arm\u00e1rio** com a esperan\u00e7a de \"um dia usar de novo\"\n- **Ter um passo a passo claro**, sem enrola\u00e7\u00e3o, sem terrorismo nutricional e sem promessas vazias \u2014 s\u00f3 o que realmente funciona para o corpo feminino depois dos 40\n\n---\n\n## FECHAMENTO\n\nEu sei que voc\u00ea j\u00e1 tentou de tudo. J\u00e1 cortou carboidrato, j\u00e1 fez jejum, j\u00e1 comprou aquele ch\u00e1, aquele shake, aquele programa de exerc\u00edcios que prometia \"queimar gordura em 15 dias\". E no fundo, talvez voc\u00ea j\u00e1 tenha pensado: *\"Ser\u00e1 que n\u00e3o \u00e9 mais pra mim? Ser\u00e1 que essa fase da vida \u00e9 isso mesmo, e ponto final?\"*\n\nN\u00e3o \u00e9.\n\nO que voc\u00ea precisava n\u00e3o era de mais for\u00e7a de vontade. Era de um m\u00e9todo que respeitasse o momento hormonal em que seu corpo est\u00e1 agora \u2014 e \u00e9 exatamente isso que est\u00e1 diante de voc\u00ea.\n\nMilhares de mulheres na sua idade, com a sua mesma frustra\u00e7\u00e3o, j\u00e1 usaram este m\u00e9todo para voltar a emagrecer de forma leve, constante e definitiva, sem viver de dieta e sem se sentir ref\u00e9m do pr\u00f3prio corpo.\n\nAgora \u00e9 a sua vez de parar de lutar contra a menopausa \u2014 e come\u00e7ar a trabalhar a favor dela.\n\n**[QUERO COME\u00c7AR AGORA]**\n\n---\n\n**P.S.:** Cada m\u00eas que passa \"tentando descobrir sozinha\" \u00e9 um m\u00eas a mais convivendo com o cansa\u00e7o, a roupa apertada e a autoestima l\u00e1 embaixo. Voc\u00ea n\u00e3o precisa continuar assim. O m\u00e9todo est\u00e1 pronto, testado e adaptado exatamente para o seu momento de vida \u2014 s\u00f3 falta voc\u00ea dar o primeiro passo. Clique agora e comece hoje mesmo a trabalhar a favor do seu corpo, n\u00e3o contra ele.\n"}], "grading": null}, {"id": "eval-revisao-headline-with_skill", "prompt": "d\u00e1 uma olhada nessa headline e me fala o que t\u00e1 errado e como melhorar: \"Conhe\u00e7a nosso revolucion\u00e1rio sistema de gest\u00e3o financeira com Intelig\u00eancia Artificial\"", "eval_id": 3, "outputs": [{"name": "output.md", "type": "text", "content": "# Revis\u00e3o da headline\n\n**Original:** \"Conhe\u00e7a nosso revolucion\u00e1rio sistema de gest\u00e3o financeira com Intelig\u00eancia Artificial\"\n\n## O veredito r\u00e1pido\n\nEssa headline n\u00e3o sobrevive nem ao primeiro filtro. Ela fala do produto, n\u00e3o da vida de quem l\u00ea \u2014 e isso mata o copy antes de ele come\u00e7ar. Lembra: em m\u00e9dia 5x mais gente l\u00ea a headline do que o resto do texto, e a \u00fanica fun\u00e7\u00e3o dela \u00e9 fazer algu\u00e9m ler a frase seguinte. Essa aqui n\u00e3o convida ningu\u00e9m a continuar.\n\n## O que est\u00e1 errado, ponto a ponto\n\n**1. Fala da empresa, n\u00e3o do leitor.**\n\"Conhe\u00e7a nosso\" coloca o produto no centro. Ningu\u00e9m acorda de manh\u00e3 pensando \"preciso conhecer um sistema\" \u2014 pensa \"preciso parar de perder dinheiro sem saber pra onde ele foi\". A headline precisa entrar na conversa que j\u00e1 est\u00e1 na cabe\u00e7a da persona, n\u00e3o na conversa que a empresa quer ter.\n\n**2. \u00c9 uma caracter\u00edstica disfar\u00e7ada de benef\u00edcio.**\n\"Sistema de gest\u00e3o financeira com Intelig\u00eancia Artificial\" descreve o que a coisa *\u00e9* (o mecanismo), n\u00e3o o que a pessoa *ganha*. Passa reto pelo teste do tapa na testa: ningu\u00e9m vira de madrugada pensando \"eu preciso de um sistema com IA\". A pessoa quer o resultado \u2014 parar de viver no vermelho, entender pra onde o dinheiro vai, n\u00e3o ter mais que abrir planilha nenhuma.\n\n**3. \"Revolucion\u00e1rio\" \u00e9 clich\u00ea vazio.**\n\u00c9 a palavra que todo produto de tecnologia usa pra dizer \"eu sou bom\" sem provar nada. Bate na categoria de Novidade do banco de palavras, mas sozinha ela n\u00e3o convence \u2014 \u00e9 adjetivo de propaganda gen\u00e9rica, exatamente o tipo de frase feita que o livro pede pra evitar. Sem prova, sem n\u00famero, sem especificidade, \"revolucion\u00e1rio\" soa a \"guru vendendo curso\".\n\n**4. Zero ultra-especificidade.**\nNenhum n\u00famero, prazo, resultado concreto. N\u00e3o d\u00e1 pra saber se o \"sistema\" economiza 5 horas por semana, evita multas, avisa antes de faltar dinheiro no fim do m\u00eas \u2014 nada. Fica tudo em promessa gen\u00e9rica.\n\n**5. Nenhuma urg\u00eancia.**\nN\u00e3o h\u00e1 motivo para ler agora em vez de daqui a uma semana. Nada que fa\u00e7a a pessoa sentir que precisa continuar lendo j\u00e1.\n\n**6. Exclusividade s\u00f3 na palavra, n\u00e3o no fato.**\nDizer \"revolucion\u00e1rio\" n\u00e3o \u00e9 a mesma coisa que mostrar algo que s\u00f3 esse produto faz. Falta o \"isso, e s\u00f3 isso, resolve\".\n\n**7. Longa e formal demais.**\n11 palavras (o ideal \u00e9 at\u00e9 8) e tom rob\u00f3tico de release de imprensa \u2014 n\u00e3o soa como duas pessoas conversando, soa como nota oficial de lan\u00e7amento.\n\nResultado: dos 4 U's (Utilidade, Urg\u00eancia, Exclusividade, Ultra-especificidade) \u2014 que uma headline forte precisa ter pelo menos 3 \u2014 essa aqui n\u00e3o cumpre nenhum de verdade. Tem, no m\u00e1ximo, uma utilidade *impl\u00edcita* e nada al\u00e9m disso.\n\n## Como melhorar\n\nO primeiro passo n\u00e3o \u00e9 reescrever a frase \u2014 \u00e9 definir o n\u00facleo emocional de compra: quem \u00e9 essa pessoa e o que ela realmente ganha. Como n\u00e3o veio esse contexto, estou assumindo uma persona pra destravar a reescrita: **um pequeno empres\u00e1rio ou aut\u00f4nomo brasileiro que perde tempo (e sono) tentando entender pra onde o dinheiro do neg\u00f3cio est\u00e1 indo, vive com medo de faltar caixa no fim do m\u00eas e est\u00e1 cansado de planilha.** Se a persona real for outra (ex: pessoa f\u00edsica querendo guardar dinheiro, ou empresa maior com equipe financeira), o \u00e2ngulo muda \u2014 mas o m\u00e9todo \u00e9 o mesmo: transformar \"o que o sistema faz\" em \"o que a pessoa sente que ganhou\".\n\nA partir da\u00ed, a f\u00f3rmula \u00e9: pegar a caracter\u00edstica (IA fazendo gest\u00e3o financeira) e perguntar \"por que isso \u00e9 bom pra mim?\" at\u00e9 chegar em algo que d\u00f3i ou seduz de verdade \u2014 controle, al\u00edvio, tempo de volta, fim da ansiedade de fim de m\u00eas.\n\n### Headlines reescritas (exemplos, cada uma testando um \u00e2ngulo diferente)\n\n1. **\"Sua empresa nunca mais vai te pegar de surpresa no fim do m\u00eas\"**\n   *(Choque de valores + Utilidade + Urg\u00eancia impl\u00edcita \u2014 fala do medo real, n\u00e3o do produto)*\n\n2. **\"Pare de descobrir tarde demais que faltou dinheiro no caixa\"**\n   *(Frustra\u00e7\u00e3o comum + Utilidade \u2014 nomeia a dor que a persona j\u00e1 sente)*\n\n3. **\"Um app que avisa 10 dias antes de faltar dinheiro na sua empresa\"**\n   *(Ultra-especificidade com n\u00famero + Utilidade \u2014 \"IA\" vira concretamente \"avisa antes\")*\n\n4. **\"Cansado de planilha? Sua gest\u00e3o financeira se organiza sozinha em 1 minuto por dia\"**\n   *(D\u00favida ardente/frustra\u00e7\u00e3o + Ultra-especificidade + Simplicidade \u2014 ataca o h\u00e1bito doloroso atual)*\n\n5. **\"O fim da ansiedade de abrir o extrato no fim do m\u00eas\"**\n   *(Escreva direto \u00e0 emo\u00e7\u00e3o dominante + Utilidade \u2014 vai direto no sentimento, n\u00e3o na ferramenta)*\n\nRepare no padr\u00e3o: nenhuma menciona \"sistema\", \"gest\u00e3o financeira\" ou \"Intelig\u00eancia Artificial\" logo de cara \u2014 porque isso \u00e9 *como* o resultado \u00e9 entregue, n\u00e3o o resultado em si. A IA deveria aparecer no corpo do texto ou no deck copy, provando *como* a promessa da headline \u00e9 cumprida (ex.: \"nossa IA analisa seu fluxo de caixa todo dia e avisa antes de faltar dinheiro\") \u2014 n\u00e3o carregando o peso da headline sozinha.\n\n### Checklist pra testar a pr\u00f3xima vers\u00e3o\n\nAntes de fechar a headline, pergunte:\n- Ela fala da vida da pessoa ou do produto?\n- D\u00e1 pra saber, sem esfor\u00e7o, o que ela ganha?\n- Tem pelo menos 3 dos 4 U's (Utilidade, Urg\u00eancia, Exclusividade, Ultra-especificidade)?\n- Cabe em at\u00e9 8 palavras?\n- Soa como uma pessoa falando com a outra, ou como nota de imprensa?\n\nSe a resposta for sim pras cinco, voc\u00ea est\u00e1 no caminho certo.\n"}], "grading": null}, {"id": "eval-revisao-headline-without_skill", "prompt": "d\u00e1 uma olhada nessa headline e me fala o que t\u00e1 errado e como melhorar: \"Conhe\u00e7a nosso revolucion\u00e1rio sistema de gest\u00e3o financeira com Intelig\u00eancia Artificial\"", "eval_id": 3, "outputs": [{"name": "output.md", "type": "text", "content": "# An\u00e1lise da headline\n\n**Headline original:**\n\"Conhe\u00e7a nosso revolucion\u00e1rio sistema de gest\u00e3o financeira com Intelig\u00eancia Artificial\"\n\n## O que est\u00e1 errado\n\n1. **\u00c9 sobre voc\u00eas, n\u00e3o sobre o leitor.** \"Conhe\u00e7a **nosso**\" coloca a empresa no centro da frase, quando quem deveria estar no centro \u00e9 o problema ou o desejo de quem est\u00e1 lendo. Ningu\u00e9m acorda querendo \"conhecer um sistema\" \u2014 as pessoas querem resolver algo (perder menos tempo, parar de errar planilha, entender pra onde o dinheiro est\u00e1 indo).\n\n2. **\"Revolucion\u00e1rio\" \u00e9 uma palavra vazia.** \u00c9 adjetivo que todo mundo usa e ningu\u00e9m mais acredita. Sem prova, n\u00famero ou contexto, ele soa como autoelogio e na pr\u00e1tica reduz a credibilidade em vez de aumentar \u2014 o c\u00e9rebro do leitor j\u00e1 filtra esse tipo de superlativo como \"propaganda\".\n\n3. **\"Conhe\u00e7a\" \u00e9 um verbo fraco.** Pede uma a\u00e7\u00e3o de baix\u00edssimo compromisso (olhar) em vez de despertar curiosidade ou desejo. Boas headlines fazem o leitor querer saber \"como assim?\" \u2014 essa apenas convida a um convite gen\u00e9rico.\n\n4. **N\u00e3o entrega benef\u00edcio nem especificidade.** \"Sistema de gest\u00e3o financeira com Intelig\u00eancia Artificial\" \u00e9 descri\u00e7\u00e3o de categoria/feature, n\u00e3o de resultado. N\u00e3o diz o que muda na vida de quem usa: economiza tempo? Reduz erro? Aumenta lucro? Substitui a planilha? \"Com IA\" virou jarg\u00e3o de pitch de startup e, sozinho, n\u00e3o comunica valor nenhum pro usu\u00e1rio final.\n\n5. **N\u00e3o fala com um p\u00fablico espec\u00edfico.** \"Nosso sistema\" serve pra qualquer empresa, qualquer pessoa, qualquer contexto \u2014 e headline gen\u00e9rica demais n\u00e3o gera identifica\u00e7\u00e3o. Quanto mais espec\u00edfico (aut\u00f4nomo, pequena empresa, freelancer, CFO etc.), mais ela \"grita o nome\" de quem precisa ler.\n\n6. **Falta prova ou n\u00famero.** N\u00e3o h\u00e1 nenhum dado concreto (10 horas economizadas, 90% menos erros, R$ X organizados) que ancore a promessa e a torne verific\u00e1vel/tang\u00edvel.\n\n## Como melhorar\n\nRegra geral: troque \"o que \u00e9\" (categoria de produto) por \"o que muda pra voc\u00ea\" (resultado/benef\u00edcio), tire o autoelogio e, se poss\u00edvel, entre com um n\u00famero ou uma dor concreta.\n\nAlguns caminhos, do mais direto ao mais provocativo:\n\n- **Foco em resultado com n\u00famero:**\n  \"Economize at\u00e9 10 horas por m\u00eas na gest\u00e3o financeira \u2014 a IA cuida das planilhas por voc\u00ea\"\n\n- **Foco na dor que ela resolve:**\n  \"Chega de planilha e erro de digita\u00e7\u00e3o: sua gest\u00e3o financeira agora roda sozinha\"\n\n- **Foco em prova/benef\u00edcio mensur\u00e1vel:**\n  \"Reduza erros financeiros em at\u00e9 90% com uma IA que organiza tudo por voc\u00ea\"\n\n- **Mais curta e direta, tirando o autoelogio:**\n  \"Sua gest\u00e3o financeira no piloto autom\u00e1tico\"\n\n- **Se quiser manter \"IA\" mas com benef\u00edcio claro:**\n  \"A IA que fecha seu caixa em minutos, n\u00e3o em horas\"\n\nTodas essas vers\u00f5es fazem tr\u00eas coisas que a original n\u00e3o faz: colocam o leitor (voc\u00ea) como sujeito, trocam adjetivo vago por resultado concreto, e d\u00e3o um motivo espec\u00edfico para continuar lendo.\n"}], "grading": null}], "previous_feedback": {}, "previous_outputs": {}};
+
+    // ---- State ----
+    let feedbackMap = {};  // run_id -> feedback text
+    let currentIndex = 0;
+    let visitedRuns = new Set();
+
+    // ---- Init ----
+    async function init() {
+      // Load saved feedback from server — but only if this isn't a fresh
+      // iteration (indicated by previous_feedback being present). When
+      // previous feedback exists, the feedback.json on disk is stale from
+      // the prior iteration and should not pre-fill the textareas.
+      const hasPrevious = Object.keys(EMBEDDED_DATA.previous_feedback || {}).length > 0
+        || Object.keys(EMBEDDED_DATA.previous_outputs || {}).length > 0;
+      if (!hasPrevious) {
+        try {
+          const resp = await fetch("/api/feedback");
+          const data = await resp.json();
+          if (data.reviews) {
+            for (const r of data.reviews) feedbackMap[r.run_id] = r.feedback;
+          }
+        } catch { /* first run, no feedback yet */ }
+      }
+
+      document.getElementById("skill-name").textContent = EMBEDDED_DATA.skill_name;
+      showRun(0);
+
+      // Wire up feedback auto-save
+      const textarea = document.getElementById("feedback");
+      let saveTimeout = null;
+      textarea.addEventListener("input", () => {
+        clearTimeout(saveTimeout);
+        document.getElementById("feedback-status").textContent = "";
+        saveTimeout = setTimeout(() => saveCurrentFeedback(), 800);
+      });
+    }
+
+    // ---- Navigation ----
+    function navigate(delta) {
+      const newIndex = currentIndex + delta;
+      if (newIndex >= 0 && newIndex < EMBEDDED_DATA.runs.length) {
+        saveCurrentFeedback();
+        showRun(newIndex);
+      }
+    }
+
+    function updateNavButtons() {
+      document.getElementById("prev-btn").disabled = currentIndex === 0;
+      document.getElementById("next-btn").disabled =
+        currentIndex === EMBEDDED_DATA.runs.length - 1;
+    }
+
+    // ---- Show a run ----
+    function showRun(index) {
+      currentIndex = index;
+      const run = EMBEDDED_DATA.runs[index];
+
+      // Progress
+      document.getElementById("progress").textContent =
+        `${index + 1} of ${EMBEDDED_DATA.runs.length}`;
+
+      // Prompt
+      document.getElementById("prompt-text").textContent = run.prompt;
+
+      // Config badge
+      const badge = document.getElementById("config-badge");
+      const configMatch = run.id.match(/(with_skill|without_skill|new_skill|old_skill)/);
+      if (configMatch) {
+        const config = configMatch[1];
+        const isBaseline = config === "without_skill" || config === "old_skill";
+        badge.textContent = config.replace(/_/g, " ");
+        badge.className = "config-badge " + (isBaseline ? "config-baseline" : "config-primary");
+        badge.style.display = "inline-block";
+      } else {
+        badge.style.display = "none";
+      }
+
+      // Outputs
+      renderOutputs(run);
+
+      // Previous outputs
+      renderPrevOutputs(run);
+
+      // Grades
+      renderGrades(run);
+
+      // Previous feedback
+      const prevFb = (EMBEDDED_DATA.previous_feedback || {})[run.id];
+      const prevEl = document.getElementById("prev-feedback");
+      if (prevFb) {
+        document.getElementById("prev-feedback-text").textContent = prevFb;
+        prevEl.style.display = "block";
+      } else {
+        prevEl.style.display = "none";
+      }
+
+      // Feedback
+      document.getElementById("feedback").value = feedbackMap[run.id] || "";
+      document.getElementById("feedback-status").textContent = "";
+
+      updateNavButtons();
+
+      // Track visited runs and promote done button when all visited
+      visitedRuns.add(index);
+      const doneBtn = document.getElementById("done-btn");
+      if (visitedRuns.size >= EMBEDDED_DATA.runs.length) {
+        doneBtn.classList.add("ready");
+      }
+
+      // Scroll main content to top
+      document.querySelector(".main").scrollTop = 0;
+    }
+
+    // ---- Render outputs ----
+    function renderOutputs(run) {
+      const container = document.getElementById("outputs-body");
+      container.innerHTML = "";
+
+      const outputs = run.outputs || [];
+      if (outputs.length === 0) {
+        container.innerHTML = '<div class="empty-state">No output files</div>';
+        return;
+      }
+
+      for (const file of outputs) {
+        const fileDiv = document.createElement("div");
+        fileDiv.className = "output-file";
+
+        // Always show file header with download link
+        const header = document.createElement("div");
+        header.className = "output-file-header";
+        const nameSpan = document.createElement("span");
+        nameSpan.textContent = file.name;
+        header.appendChild(nameSpan);
+        const dlBtn = document.createElement("a");
+        dlBtn.className = "dl-btn";
+        dlBtn.textContent = "Download";
+        dlBtn.download = file.name;
+        dlBtn.href = getDownloadUri(file);
+        header.appendChild(dlBtn);
+        fileDiv.appendChild(header);
+
+        const content = document.createElement("div");
+        content.className = "output-file-content";
+
+        if (file.type === "text") {
+          const pre = document.createElement("pre");
+          pre.textContent = file.content;
+          content.appendChild(pre);
+        } else if (file.type === "image") {
+          const img = document.createElement("img");
+          img.src = file.data_uri;
+          img.alt = file.name;
+          content.appendChild(img);
+        } else if (file.type === "pdf") {
+          const iframe = document.createElement("iframe");
+          iframe.src = file.data_uri;
+          content.appendChild(iframe);
+        } else if (file.type === "xlsx") {
+          renderXlsx(content, file.data_b64);
+        } else if (file.type === "binary") {
+          const a = document.createElement("a");
+          a.className = "download-link";
+          a.href = file.data_uri;
+          a.download = file.name;
+          a.textContent = "Download " + file.name;
+          content.appendChild(a);
+        } else if (file.type === "error") {
+          const pre = document.createElement("pre");
+          pre.textContent = file.content;
+          pre.style.color = "var(--red)";
+          content.appendChild(pre);
+        }
+
+        fileDiv.appendChild(content);
+        container.appendChild(fileDiv);
+      }
+    }
+
+    // ---- XLSX rendering via SheetJS ----
+    function renderXlsx(container, b64Data) {
+      try {
+        const raw = Uint8Array.from(atob(b64Data), c => c.charCodeAt(0));
+        const wb = XLSX.read(raw, { type: "array" });
+
+        for (let i = 0; i < wb.SheetNames.length; i++) {
+          const sheetName = wb.SheetNames[i];
+          const ws = wb.Sheets[sheetName];
+
+          if (wb.SheetNames.length > 1) {
+            const sheetLabel = document.createElement("div");
+            sheetLabel.style.cssText =
+              "font-weight:600; font-size:0.8rem; color:#b0aea5; margin-top:0.5rem; margin-bottom:0.25rem;";
+            sheetLabel.textContent = "Sheet: " + sheetName;
+            container.appendChild(sheetLabel);
+          }
+
+          const htmlStr = XLSX.utils.sheet_to_html(ws, { editable: false });
+          const wrapper = document.createElement("div");
+          wrapper.innerHTML = htmlStr;
+          container.appendChild(wrapper);
+        }
+      } catch (err) {
+        container.textContent = "Error rendering spreadsheet: " + err.message;
+      }
+    }
+
+    // ---- Grades ----
+    function renderGrades(run) {
+      const section = document.getElementById("grades-section");
+      const content = document.getElementById("grades-content");
+
+      if (!run.grading) {
+        section.style.display = "none";
+        return;
+      }
+
+      const grading = run.grading;
+      section.style.display = "block";
+      // Reset to collapsed
+      content.classList.remove("open");
+      document.getElementById("grades-arrow").classList.remove("open");
+
+      const summary = grading.summary || {};
+      const expectations = grading.expectations || [];
+
+      let html = '<div style="padding: 1rem;">';
+
+      // Summary line
+      const passRate = summary.pass_rate != null
+        ? Math.round(summary.pass_rate * 100) + "%"
+        : "?";
+      const badgeClass = summary.pass_rate >= 0.8 ? "grade-pass" : summary.pass_rate >= 0.5 ? "" : "grade-fail";
+      html += '<div class="grades-summary">';
+      html += '<span class="grade-badge ' + badgeClass + '">' + passRate + '</span>';
+      html += '<span>' + (summary.passed || 0) + ' passed, ' + (summary.failed || 0) + ' failed of ' + (summary.total || 0) + '</span>';
+      html += '</div>';
+
+      // Assertions list
+      html += '<ul class="assertion-list">';
+      for (const exp of expectations) {
+        const statusClass = exp.passed ? "pass" : "fail";
+        const statusIcon = exp.passed ? "\u2713" : "\u2717";
+        html += '<li class="assertion-item">';
+        html += '<span class="assertion-status ' + statusClass + '">' + statusIcon + '</span>';
+        html += '<span>' + escapeHtml(exp.text) + '</span>';
+        if (exp.evidence) {
+          html += '<div class="assertion-evidence">' + escapeHtml(exp.evidence) + '</div>';
+        }
+        html += '</li>';
+      }
+      html += '</ul>';
+
+      html += '</div>';
+      content.innerHTML = html;
+    }
+
+    function toggleGrades() {
+      const content = document.getElementById("grades-content");
+      const arrow = document.getElementById("grades-arrow");
+      content.classList.toggle("open");
+      arrow.classList.toggle("open");
+    }
+
+    // ---- Previous outputs (collapsible) ----
+    function renderPrevOutputs(run) {
+      const section = document.getElementById("prev-outputs-section");
+      const content = document.getElementById("prev-outputs-content");
+      const prevOutputs = (EMBEDDED_DATA.previous_outputs || {})[run.id];
+
+      if (!prevOutputs || prevOutputs.length === 0) {
+        section.style.display = "none";
+        return;
+      }
+
+      section.style.display = "block";
+      // Reset to collapsed
+      content.classList.remove("open");
+      document.getElementById("prev-outputs-arrow").classList.remove("open");
+
+      // Render the files into the content area
+      content.innerHTML = "";
+      const wrapper = document.createElement("div");
+      wrapper.style.padding = "1rem";
+
+      for (const file of prevOutputs) {
+        const fileDiv = document.createElement("div");
+        fileDiv.className = "output-file";
+
+        const header = document.createElement("div");
+        header.className = "output-file-header";
+        const nameSpan = document.createElement("span");
+        nameSpan.textContent = file.name;
+        header.appendChild(nameSpan);
+        const dlBtn = document.createElement("a");
+        dlBtn.className = "dl-btn";
+        dlBtn.textContent = "Download";
+        dlBtn.download = file.name;
+        dlBtn.href = getDownloadUri(file);
+        header.appendChild(dlBtn);
+        fileDiv.appendChild(header);
+
+        const fc = document.createElement("div");
+        fc.className = "output-file-content";
+
+        if (file.type === "text") {
+          const pre = document.createElement("pre");
+          pre.textContent = file.content;
+          fc.appendChild(pre);
+        } else if (file.type === "image") {
+          const img = document.createElement("img");
+          img.src = file.data_uri;
+          img.alt = file.name;
+          fc.appendChild(img);
+        } else if (file.type === "pdf") {
+          const iframe = document.createElement("iframe");
+          iframe.src = file.data_uri;
+          fc.appendChild(iframe);
+        } else if (file.type === "xlsx") {
+          renderXlsx(fc, file.data_b64);
+        } else if (file.type === "binary") {
+          const a = document.createElement("a");
+          a.className = "download-link";
+          a.href = file.data_uri;
+          a.download = file.name;
+          a.textContent = "Download " + file.name;
+          fc.appendChild(a);
+        }
+
+        fileDiv.appendChild(fc);
+        wrapper.appendChild(fileDiv);
+      }
+
+      content.appendChild(wrapper);
+    }
+
+    function togglePrevOutputs() {
+      const content = document.getElementById("prev-outputs-content");
+      const arrow = document.getElementById("prev-outputs-arrow");
+      content.classList.toggle("open");
+      arrow.classList.toggle("open");
+    }
+
+    // ---- Feedback (saved to server -> feedback.json) ----
+    function saveCurrentFeedback() {
+      const run = EMBEDDED_DATA.runs[currentIndex];
+      const text = document.getElementById("feedback").value;
+
+      if (text.trim() === "") {
+        delete feedbackMap[run.id];
+      } else {
+        feedbackMap[run.id] = text;
+      }
+
+      // Build reviews array from map
+      const reviews = [];
+      for (const [run_id, feedback] of Object.entries(feedbackMap)) {
+        if (feedback.trim()) {
+          reviews.push({ run_id, feedback, timestamp: new Date().toISOString() });
+        }
+      }
+
+      fetch("/api/feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reviews, status: "in_progress" }),
+      }).then(() => {
+        document.getElementById("feedback-status").textContent = "Saved";
+      }).catch(() => {
+        // Static mode or server unavailable — no-op on auto-save,
+        // feedback will be downloaded on final submit
+        document.getElementById("feedback-status").textContent = "Will download on submit";
+      });
+    }
+
+    // ---- Done ----
+    function showDoneDialog() {
+      // Save current textarea to feedbackMap (but don't POST yet)
+      const run = EMBEDDED_DATA.runs[currentIndex];
+      const text = document.getElementById("feedback").value;
+      if (text.trim() === "") {
+        delete feedbackMap[run.id];
+      } else {
+        feedbackMap[run.id] = text;
+      }
+
+      // POST once with status: complete — include ALL runs so the model
+      // can distinguish "no feedback" (looks good) from "not reviewed"
+      const reviews = [];
+      const ts = new Date().toISOString();
+      for (const r of EMBEDDED_DATA.runs) {
+        reviews.push({ run_id: r.id, feedback: feedbackMap[r.id] || "", timestamp: ts });
+      }
+      const payload = JSON.stringify({ reviews, status: "complete" }, null, 2);
+      fetch("/api/feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: payload,
+      }).then(() => {
+        document.getElementById("done-overlay").classList.add("visible");
+      }).catch(() => {
+        // Server not available (static mode) — download as file
+        const blob = new Blob([payload], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "feedback.json";
+        a.click();
+        URL.revokeObjectURL(url);
+        document.getElementById("done-overlay").classList.add("visible");
+      });
+    }
+
+    function closeDoneDialog() {
+      // Reset status back to in_progress
+      saveCurrentFeedback();
+      document.getElementById("done-overlay").classList.remove("visible");
+    }
+
+    // ---- Toast ----
+    function showToast(message) {
+      const toast = document.getElementById("toast");
+      toast.textContent = message;
+      toast.classList.add("visible");
+      setTimeout(() => toast.classList.remove("visible"), 2000);
+    }
+
+    // ---- Keyboard nav ----
+    document.addEventListener("keydown", (e) => {
+      // Don't capture when typing in textarea
+      if (e.target.tagName === "TEXTAREA") return;
+
+      if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
+        e.preventDefault();
+        navigate(-1);
+      } else if (e.key === "ArrowRight" || e.key === "ArrowDown") {
+        e.preventDefault();
+        navigate(1);
+      }
+    });
+
+    // ---- Util ----
+    function getDownloadUri(file) {
+      if (file.data_uri) return file.data_uri;
+      if (file.data_b64) return "data:application/octet-stream;base64," + file.data_b64;
+      if (file.type === "text") return "data:text/plain;charset=utf-8," + encodeURIComponent(file.content);
+      return "#";
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement("div");
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // ---- View switching ----
+    function switchView(view) {
+      document.querySelectorAll(".view-tab").forEach(t => t.classList.remove("active"));
+      document.querySelectorAll(".view-panel").forEach(p => p.classList.remove("active"));
+      document.querySelector(`[onclick="switchView('${view}')"]`).classList.add("active");
+      document.getElementById("panel-" + view).classList.add("active");
+    }
+
+    // ---- Benchmark rendering ----
+    function renderBenchmark() {
+      const data = EMBEDDED_DATA.benchmark;
+      if (!data) return;
+
+      // Show the tabs
+      document.getElementById("view-tabs").style.display = "flex";
+
+      const container = document.getElementById("benchmark-content");
+      const summary = data.run_summary || {};
+      const metadata = data.metadata || {};
+      const notes = data.notes || [];
+
+      let html = "";
+
+      // Header
+      html += "<h2 style='font-family: Poppins, sans-serif; margin-bottom: 0.5rem;'>Benchmark Results</h2>";
+      html += "<p style='color: var(--text-muted); font-size: 0.875rem; margin-bottom: 1.25rem;'>";
+      if (metadata.skill_name) html += "<strong>" + escapeHtml(metadata.skill_name) + "</strong> &mdash; ";
+      if (metadata.timestamp) html += metadata.timestamp + " &mdash; ";
+      if (metadata.evals_run) html += "Evals: " + metadata.evals_run.join(", ") + " &mdash; ";
+      html += (metadata.runs_per_configuration || "?") + " runs per configuration";
+      html += "</p>";
+
+      // Summary table
+      html += '<table class="benchmark-table">';
+
+      function fmtStat(stat, pct) {
+        if (!stat) return "—";
+        const suffix = pct ? "%" : "";
+        const m = pct ? (stat.mean * 100).toFixed(0) : stat.mean.toFixed(1);
+        const s = pct ? (stat.stddev * 100).toFixed(0) : stat.stddev.toFixed(1);
+        return m + suffix + " ± " + s + suffix;
+      }
+
+      function deltaClass(val) {
+        if (!val) return "";
+        const n = parseFloat(val);
+        if (n > 0) return "benchmark-delta-positive";
+        if (n < 0) return "benchmark-delta-negative";
+        return "";
+      }
+
+      // Discover config names dynamically (everything except "delta")
+      const configs = Object.keys(summary).filter(k => k !== "delta");
+      const configA = configs[0] || "config_a";
+      const configB = configs[1] || "config_b";
+      const labelA = configA.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+      const labelB = configB.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+      const a = summary[configA] || {};
+      const b = summary[configB] || {};
+      const delta = summary.delta || {};
+
+      html += "<thead><tr><th>Metric</th><th>" + escapeHtml(labelA) + "</th><th>" + escapeHtml(labelB) + "</th><th>Delta</th></tr></thead>";
+      html += "<tbody>";
+
+      html += "<tr><td><strong>Pass Rate</strong></td>";
+      html += "<td>" + fmtStat(a.pass_rate, true) + "</td>";
+      html += "<td>" + fmtStat(b.pass_rate, true) + "</td>";
+      html += '<td class="' + deltaClass(delta.pass_rate) + '">' + (delta.pass_rate || "—") + "</td></tr>";
+
+      // Time (only show row if data exists)
+      if (a.time_seconds || b.time_seconds) {
+        html += "<tr><td><strong>Time (s)</strong></td>";
+        html += "<td>" + fmtStat(a.time_seconds, false) + "</td>";
+        html += "<td>" + fmtStat(b.time_seconds, false) + "</td>";
+        html += '<td class="' + deltaClass(delta.time_seconds) + '">' + (delta.time_seconds ? delta.time_seconds + "s" : "—") + "</td></tr>";
+      }
+
+      // Tokens (only show row if data exists)
+      if (a.tokens || b.tokens) {
+        html += "<tr><td><strong>Tokens</strong></td>";
+        html += "<td>" + fmtStat(a.tokens, false) + "</td>";
+        html += "<td>" + fmtStat(b.tokens, false) + "</td>";
+        html += '<td class="' + deltaClass(delta.tokens) + '">' + (delta.tokens || "—") + "</td></tr>";
+      }
+
+      html += "</tbody></table>";
+
+      // Per-eval breakdown (if runs data available)
+      const runs = data.runs || [];
+      if (runs.length > 0) {
+        const evalIds = [...new Set(runs.map(r => r.eval_id))].sort((a, b) => a - b);
+
+        html += "<h3 style='font-family: Poppins, sans-serif; margin-bottom: 0.75rem;'>Per-Eval Breakdown</h3>";
+
+        const hasTime = runs.some(r => r.result && r.result.time_seconds != null);
+        const hasErrors = runs.some(r => r.result && r.result.errors > 0);
+
+        for (const evalId of evalIds) {
+          const evalRuns = runs.filter(r => r.eval_id === evalId);
+          const evalName = evalRuns[0] && evalRuns[0].eval_name ? evalRuns[0].eval_name : "Eval " + evalId;
+
+          html += "<h4 style='font-family: Poppins, sans-serif; margin: 1rem 0 0.5rem; color: var(--text);'>" + escapeHtml(evalName) + "</h4>";
+          html += '<table class="benchmark-table">';
+          html += "<thead><tr><th>Config</th><th>Run</th><th>Pass Rate</th>";
+          if (hasTime) html += "<th>Time (s)</th>";
+          if (hasErrors) html += "<th>Crashes During Execution</th>";
+          html += "</tr></thead>";
+          html += "<tbody>";
+
+          // Group by config and render with average rows
+          const configGroups = [...new Set(evalRuns.map(r => r.configuration))];
+          for (let ci = 0; ci < configGroups.length; ci++) {
+            const config = configGroups[ci];
+            const configRuns = evalRuns.filter(r => r.configuration === config);
+            if (configRuns.length === 0) continue;
+
+            const rowClass = ci === 0 ? "benchmark-row-with" : "benchmark-row-without";
+            const configLabel = config.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+
+            for (const run of configRuns) {
+              const r = run.result || {};
+              const prClass = r.pass_rate >= 0.8 ? "benchmark-delta-positive" : r.pass_rate < 0.5 ? "benchmark-delta-negative" : "";
+              html += '<tr class="' + rowClass + '">';
+              html += "<td>" + configLabel + "</td>";
+              html += "<td>" + run.run_number + "</td>";
+              html += '<td class="' + prClass + '">' + ((r.pass_rate || 0) * 100).toFixed(0) + "% (" + (r.passed || 0) + "/" + (r.total || 0) + ")</td>";
+              if (hasTime) html += "<td>" + (r.time_seconds != null ? r.time_seconds.toFixed(1) : "—") + "</td>";
+              if (hasErrors) html += "<td>" + (r.errors || 0) + "</td>";
+              html += "</tr>";
+            }
+
+            // Average row
+            const rates = configRuns.map(r => (r.result || {}).pass_rate || 0);
+            const avgRate = rates.reduce((a, b) => a + b, 0) / rates.length;
+            const avgPrClass = avgRate >= 0.8 ? "benchmark-delta-positive" : avgRate < 0.5 ? "benchmark-delta-negative" : "";
+            html += '<tr class="benchmark-row-avg ' + rowClass + '">';
+            html += "<td>" + configLabel + "</td>";
+            html += "<td>Avg</td>";
+            html += '<td class="' + avgPrClass + '">' + (avgRate * 100).toFixed(0) + "%</td>";
+            if (hasTime) {
+              const times = configRuns.map(r => (r.result || {}).time_seconds).filter(t => t != null);
+              html += "<td>" + (times.length ? (times.reduce((a, b) => a + b, 0) / times.length).toFixed(1) : "—") + "</td>";
+            }
+            if (hasErrors) html += "<td></td>";
+            html += "</tr>";
+          }
+          html += "</tbody></table>";
+
+          // Per-assertion detail for this eval
+          const runsWithExpectations = {};
+          for (const config of configGroups) {
+            runsWithExpectations[config] = evalRuns.filter(r => r.configuration === config && r.expectations && r.expectations.length > 0);
+          }
+          const hasAnyExpectations = Object.values(runsWithExpectations).some(runs => runs.length > 0);
+          if (hasAnyExpectations) {
+            // Collect all unique assertion texts across all configs
+            const allAssertions = [];
+            const seen = new Set();
+            for (const config of configGroups) {
+              for (const run of runsWithExpectations[config]) {
+                for (const exp of (run.expectations || [])) {
+                  if (!seen.has(exp.text)) {
+                    seen.add(exp.text);
+                    allAssertions.push(exp.text);
+                  }
+                }
+              }
+            }
+
+            html += '<table class="benchmark-table" style="margin-top: 0.5rem;">';
+            html += "<thead><tr><th>Assertion</th>";
+            for (const config of configGroups) {
+              const label = config.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+              html += "<th>" + escapeHtml(label) + "</th>";
+            }
+            html += "</tr></thead><tbody>";
+
+            for (const assertionText of allAssertions) {
+              html += "<tr><td>" + escapeHtml(assertionText) + "</td>";
+
+              for (const config of configGroups) {
+                html += "<td>";
+                for (const run of runsWithExpectations[config]) {
+                  const exp = (run.expectations || []).find(e => e.text === assertionText);
+                  if (exp) {
+                    const cls = exp.passed ? "benchmark-delta-positive" : "benchmark-delta-negative";
+                    const icon = exp.passed ? "\u2713" : "\u2717";
+                    html += '<span class="' + cls + '" title="Run ' + run.run_number + ': ' + escapeHtml(exp.evidence || "") + '">' + icon + "</span> ";
+                  } else {
+                    html += "— ";
+                  }
+                }
+                html += "</td>";
+              }
+              html += "</tr>";
+            }
+            html += "</tbody></table>";
+          }
+        }
+      }
+
+      // Notes
+      if (notes.length > 0) {
+        html += '<div class="benchmark-notes">';
+        html += "<h3>Analysis Notes</h3>";
+        html += "<ul>";
+        for (const note of notes) {
+          html += "<li>" + escapeHtml(note) + "</li>";
+        }
+        html += "</ul></div>";
+      }
+
+      container.innerHTML = html;
+    }
+
+    // ---- Start ----
+    init();
+    renderBenchmark();
+  </script>
+</body>
+</html>

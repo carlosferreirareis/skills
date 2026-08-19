@@ -1,0 +1,1325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Eval Review</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600&family=Lora:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js" integrity="sha384-EnyY0/GSHQGSxSgMwaIPzSESbqoOLSexfnSMN2AP+39Ckmn92stwABZynq1JyzdT" crossorigin="anonymous"></script>
+  <style>
+    :root {
+      --bg: #faf9f5;
+      --surface: #ffffff;
+      --border: #e8e6dc;
+      --text: #141413;
+      --text-muted: #b0aea5;
+      --accent: #d97757;
+      --accent-hover: #c4613f;
+      --green: #788c5d;
+      --green-bg: #eef2e8;
+      --red: #c44;
+      --red-bg: #fceaea;
+      --header-bg: #141413;
+      --header-text: #faf9f5;
+      --radius: 6px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Lora', Georgia, serif;
+      background: var(--bg);
+      color: var(--text);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ---- Header ---- */
+    .header {
+      background: var(--header-bg);
+      color: var(--header-text);
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-shrink: 0;
+    }
+    .header h1 {
+      font-family: 'Poppins', sans-serif;
+      font-size: 1.25rem;
+      font-weight: 600;
+    }
+    .header .instructions {
+      font-size: 0.8rem;
+      opacity: 0.7;
+      margin-top: 0.25rem;
+    }
+    .header .progress {
+      font-size: 0.875rem;
+      opacity: 0.8;
+      text-align: right;
+    }
+
+    /* ---- Main content ---- */
+    .main {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1.5rem 2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    /* ---- Sections ---- */
+    .section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      flex-shrink: 0;
+    }
+    .section-header {
+      font-family: 'Poppins', sans-serif;
+      padding: 0.75rem 1rem;
+      font-size: 0.75rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border);
+      background: var(--bg);
+    }
+    .section-body {
+      padding: 1rem;
+    }
+
+    /* ---- Config badge ---- */
+    .config-badge {
+      display: inline-block;
+      padding: 0.2rem 0.625rem;
+      border-radius: 9999px;
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.6875rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      margin-left: 0.75rem;
+      vertical-align: middle;
+    }
+    .config-badge.config-primary {
+      background: rgba(33, 150, 243, 0.12);
+      color: #1976d2;
+    }
+    .config-badge.config-baseline {
+      background: rgba(255, 193, 7, 0.15);
+      color: #f57f17;
+    }
+
+    /* ---- Prompt ---- */
+    .prompt-text {
+      white-space: pre-wrap;
+      font-size: 0.9375rem;
+      line-height: 1.6;
+    }
+
+    /* ---- Outputs ---- */
+    .output-file {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .output-file + .output-file {
+      margin-top: 1rem;
+    }
+    .output-file-header {
+      padding: 0.5rem 0.75rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      font-family: 'SF Mono', SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .output-file-header .dl-btn {
+      font-size: 0.7rem;
+      color: var(--accent);
+      text-decoration: none;
+      cursor: pointer;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-weight: 500;
+      opacity: 0.8;
+    }
+    .output-file-header .dl-btn:hover {
+      opacity: 1;
+      text-decoration: underline;
+    }
+    .output-file-content {
+      padding: 0.75rem;
+      overflow-x: auto;
+    }
+    .output-file-content pre {
+      font-size: 0.8125rem;
+      line-height: 1.5;
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-family: 'SF Mono', SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace;
+    }
+    .output-file-content img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 4px;
+    }
+    .output-file-content iframe {
+      width: 100%;
+      height: 600px;
+      border: none;
+    }
+    .output-file-content table {
+      border-collapse: collapse;
+      font-size: 0.8125rem;
+      width: 100%;
+    }
+    .output-file-content table td,
+    .output-file-content table th {
+      border: 1px solid var(--border);
+      padding: 0.375rem 0.5rem;
+      text-align: left;
+    }
+    .output-file-content table th {
+      background: var(--bg);
+      font-weight: 600;
+    }
+    .output-file-content .download-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--accent);
+      text-decoration: none;
+      font-size: 0.875rem;
+      cursor: pointer;
+    }
+    .output-file-content .download-link:hover {
+      background: var(--border);
+    }
+    .empty-state {
+      color: var(--text-muted);
+      font-style: italic;
+      padding: 2rem;
+      text-align: center;
+    }
+
+    /* ---- Feedback ---- */
+    .prev-feedback {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 0.625rem 0.75rem;
+      margin-top: 0.75rem;
+      font-size: 0.8125rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+    .prev-feedback-label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 0.25rem;
+      color: var(--text-muted);
+    }
+    .feedback-textarea {
+      width: 100%;
+      min-height: 100px;
+      padding: 0.75rem;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      font-family: inherit;
+      font-size: 0.9375rem;
+      line-height: 1.5;
+      resize: vertical;
+      color: var(--text);
+    }
+    .feedback-textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+    .feedback-status {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 0.5rem;
+      min-height: 1.1em;
+    }
+
+    /* ---- Grades (collapsible) ---- */
+    .grades-toggle {
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+      user-select: none;
+    }
+    .grades-toggle:hover {
+      color: var(--accent);
+    }
+    .grades-toggle .arrow {
+      margin-right: 0.5rem;
+      transition: transform 0.15s;
+      font-size: 0.75rem;
+    }
+    .grades-toggle .arrow.open {
+      transform: rotate(90deg);
+    }
+    .grades-content {
+      display: none;
+      margin-top: 0.75rem;
+    }
+    .grades-content.open {
+      display: block;
+    }
+    .grades-summary {
+      font-size: 0.875rem;
+      margin-bottom: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .grade-badge {
+      display: inline-block;
+      padding: 0.125rem 0.5rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .grade-pass { background: var(--green-bg); color: var(--green); }
+    .grade-fail { background: var(--red-bg); color: var(--red); }
+    .assertion-list {
+      list-style: none;
+    }
+    .assertion-item {
+      padding: 0.625rem 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.8125rem;
+    }
+    .assertion-item:last-child { border-bottom: none; }
+    .assertion-status {
+      font-weight: 600;
+      margin-right: 0.5rem;
+    }
+    .assertion-status.pass { color: var(--green); }
+    .assertion-status.fail { color: var(--red); }
+    .assertion-evidence {
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      margin-top: 0.25rem;
+      padding-left: 1.5rem;
+    }
+
+    /* ---- View tabs ---- */
+    .view-tabs {
+      display: flex;
+      gap: 0;
+      padding: 0 2rem;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .view-tab {
+      font-family: 'Poppins', sans-serif;
+      padding: 0.625rem 1.25rem;
+      font-size: 0.8125rem;
+      font-weight: 500;
+      cursor: pointer;
+      border: none;
+      background: none;
+      color: var(--text-muted);
+      border-bottom: 2px solid transparent;
+      transition: all 0.15s;
+    }
+    .view-tab:hover { color: var(--text); }
+    .view-tab.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+    }
+    .view-panel { display: none; }
+    .view-panel.active { display: flex; flex-direction: column; flex: 1; overflow: hidden; }
+
+    /* ---- Benchmark view ---- */
+    .benchmark-view {
+      padding: 1.5rem 2rem;
+      overflow-y: auto;
+      flex: 1;
+    }
+    .benchmark-table {
+      border-collapse: collapse;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      font-size: 0.8125rem;
+      width: 100%;
+      margin-bottom: 1.5rem;
+    }
+    .benchmark-table th, .benchmark-table td {
+      padding: 0.625rem 0.75rem;
+      text-align: left;
+      border: 1px solid var(--border);
+    }
+    .benchmark-table th {
+      font-family: 'Poppins', sans-serif;
+      background: var(--header-bg);
+      color: var(--header-text);
+      font-weight: 500;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .benchmark-table tr:hover { background: var(--bg); }
+    .benchmark-table tr.benchmark-row-with { background: rgba(33, 150, 243, 0.06); }
+    .benchmark-table tr.benchmark-row-without { background: rgba(255, 193, 7, 0.06); }
+    .benchmark-table tr.benchmark-row-with:hover { background: rgba(33, 150, 243, 0.12); }
+    .benchmark-table tr.benchmark-row-without:hover { background: rgba(255, 193, 7, 0.12); }
+    .benchmark-table tr.benchmark-row-avg { font-weight: 600; border-top: 2px solid var(--border); }
+    .benchmark-table tr.benchmark-row-avg.benchmark-row-with { background: rgba(33, 150, 243, 0.12); }
+    .benchmark-table tr.benchmark-row-avg.benchmark-row-without { background: rgba(255, 193, 7, 0.12); }
+    .benchmark-delta-positive { color: var(--green); font-weight: 600; }
+    .benchmark-delta-negative { color: var(--red); font-weight: 600; }
+    .benchmark-notes {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem;
+    }
+    .benchmark-notes h3 {
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.875rem;
+      margin-bottom: 0.75rem;
+    }
+    .benchmark-notes ul {
+      list-style: disc;
+      padding-left: 1.25rem;
+    }
+    .benchmark-notes li {
+      font-size: 0.8125rem;
+      line-height: 1.6;
+      margin-bottom: 0.375rem;
+    }
+    .benchmark-empty {
+      color: var(--text-muted);
+      font-style: italic;
+      text-align: center;
+      padding: 3rem;
+    }
+
+    /* ---- Navigation ---- */
+    .nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 2rem;
+      border-top: 1px solid var(--border);
+      background: var(--surface);
+      flex-shrink: 0;
+    }
+    .nav-btn {
+      font-family: 'Poppins', sans-serif;
+      padding: 0.5rem 1.25rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      cursor: pointer;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--text);
+      transition: all 0.15s;
+    }
+    .nav-btn:hover:not(:disabled) {
+      background: var(--bg);
+      border-color: var(--text-muted);
+    }
+    .nav-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+    .done-btn {
+      font-family: 'Poppins', sans-serif;
+      padding: 0.5rem 1.5rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      color: var(--text);
+      cursor: pointer;
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: all 0.15s;
+    }
+    .done-btn:hover {
+      background: var(--bg);
+      border-color: var(--text-muted);
+    }
+    .done-btn.ready {
+      border: none;
+      background: var(--accent);
+      color: white;
+      font-weight: 600;
+    }
+    .done-btn.ready:hover {
+      background: var(--accent-hover);
+    }
+    /* ---- Done overlay ---- */
+    .done-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 100;
+      justify-content: center;
+      align-items: center;
+    }
+    .done-overlay.visible {
+      display: flex;
+    }
+    .done-card {
+      background: var(--surface);
+      border-radius: 12px;
+      padding: 2rem 3rem;
+      text-align: center;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      max-width: 500px;
+    }
+    .done-card h2 {
+      font-size: 1.5rem;
+      margin-bottom: 0.5rem;
+    }
+    .done-card p {
+      color: var(--text-muted);
+      margin-bottom: 1.5rem;
+      line-height: 1.5;
+    }
+    .done-card .btn-row {
+      display: flex;
+      gap: 0.5rem;
+      justify-content: center;
+    }
+    .done-card button {
+      padding: 0.5rem 1.25rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      cursor: pointer;
+      font-size: 0.875rem;
+    }
+    .done-card button:hover {
+      background: var(--bg);
+    }
+    /* ---- Toast ---- */
+    .toast {
+      position: fixed;
+      bottom: 5rem;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--header-bg);
+      color: var(--header-text);
+      padding: 0.625rem 1.25rem;
+      border-radius: var(--radius);
+      font-size: 0.875rem;
+      opacity: 0;
+      transition: opacity 0.3s;
+      pointer-events: none;
+      z-index: 200;
+    }
+    .toast.visible {
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+  <div id="app" style="height:100vh; display:flex; flex-direction:column;">
+    <div class="header">
+      <div>
+        <h1>Eval Review: <span id="skill-name"></span></h1>
+        <div class="instructions">Review each output and leave feedback below. Navigate with arrow keys or buttons. When done, copy feedback and paste into Claude Code.</div>
+      </div>
+      <div class="progress" id="progress"></div>
+    </div>
+
+    <!-- View tabs (only shown when benchmark data exists) -->
+    <div class="view-tabs" id="view-tabs" style="display:none;">
+      <button class="view-tab active" onclick="switchView('outputs')">Outputs</button>
+      <button class="view-tab" onclick="switchView('benchmark')">Benchmark</button>
+    </div>
+
+    <!-- Outputs panel (qualitative review) -->
+    <div class="view-panel active" id="panel-outputs">
+    <div class="main">
+      <!-- Prompt -->
+      <div class="section">
+        <div class="section-header">Prompt <span class="config-badge" id="config-badge" style="display:none;"></span></div>
+        <div class="section-body">
+          <div class="prompt-text" id="prompt-text"></div>
+        </div>
+      </div>
+
+      <!-- Outputs -->
+      <div class="section">
+        <div class="section-header">Output</div>
+        <div class="section-body" id="outputs-body">
+          <div class="empty-state">No output files found</div>
+        </div>
+      </div>
+
+      <!-- Previous Output (collapsible) -->
+      <div class="section" id="prev-outputs-section" style="display:none;">
+        <div class="section-header">
+          <div class="grades-toggle" onclick="togglePrevOutputs()">
+            <span class="arrow" id="prev-outputs-arrow">&#9654;</span>
+            Previous Output
+          </div>
+        </div>
+        <div class="grades-content" id="prev-outputs-content"></div>
+      </div>
+
+      <!-- Grades (collapsible) -->
+      <div class="section" id="grades-section" style="display:none;">
+        <div class="section-header">
+          <div class="grades-toggle" onclick="toggleGrades()">
+            <span class="arrow" id="grades-arrow">&#9654;</span>
+            Formal Grades
+          </div>
+        </div>
+        <div class="grades-content" id="grades-content"></div>
+      </div>
+
+      <!-- Feedback -->
+      <div class="section">
+        <div class="section-header">Your Feedback</div>
+        <div class="section-body">
+          <textarea
+            class="feedback-textarea"
+            id="feedback"
+            placeholder="What do you think of this output? Any issues, suggestions, or things that look great?"
+          ></textarea>
+          <div class="feedback-status" id="feedback-status"></div>
+          <div class="prev-feedback" id="prev-feedback" style="display:none;">
+            <div class="prev-feedback-label">Previous feedback</div>
+            <div id="prev-feedback-text"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="nav" id="outputs-nav">
+      <button class="nav-btn" id="prev-btn" onclick="navigate(-1)">&#8592; Previous</button>
+      <button class="done-btn" id="done-btn" onclick="showDoneDialog()">Submit All Reviews</button>
+      <button class="nav-btn" id="next-btn" onclick="navigate(1)">Next &#8594;</button>
+    </div>
+    </div><!-- end panel-outputs -->
+
+    <!-- Benchmark panel (quantitative stats) -->
+    <div class="view-panel" id="panel-benchmark">
+      <div class="benchmark-view" id="benchmark-content">
+        <div class="benchmark-empty">No benchmark data available. Run a benchmark to see quantitative results here.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Done overlay -->
+  <div class="done-overlay" id="done-overlay">
+    <div class="done-card">
+      <h2>Review Complete</h2>
+      <p>Your feedback has been saved. Go back to your Claude Code session and tell Claude you're done reviewing.</p>
+      <div class="btn-row">
+        <button onclick="closeDoneDialog()">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // ---- Embedded data (injected by generate_review.py) ----
+    const EMBEDDED_DATA = {"skill_name": "carta-de-vendas-16-palavras", "runs": [{"id": "eval-planejamento-vsl-with_skill", "prompt": "preciso estruturar o script de um VSL pra vender um software de gest\u00e3o financeira pra pequenos empres\u00e1rios que ficam no aperto no fim do m\u00eas. o diferencial dele \u00e9 que ele usa IA pra avisar com anteced\u00eancia quando vai faltar caixa. me ajuda a planejar a estrutura inteira antes de eu escrever o roteiro final?", "eval_id": 1, "outputs": [{"name": "output.md", "type": "text", "content": "# Planejamento do VSL \u2014 Software de Gest\u00e3o Financeira com IA Preditiva\n\nAntes de escrever qualquer frase do roteiro final, vamos usar o m\u00e9todo **One Belief + Ten Questions** (Evaldo Albuquerque, \"A Carta de Vendas de 16 Palavras\"). A tese \u00e9 simples: **planejamento \u00e9 80% do trabalho**. Depois de fechar o One Belief e rascunhar o \u00e2ngulo das dez perguntas, o roteiro praticamente se escreve sozinho, bloco por bloco.\n\nTudo abaixo \u00e9 **estrutura e \u00e2ngulo**, n\u00e3o copy final \u2014 \u00e9 o mapa que voc\u00ea (ou eu, na pr\u00f3xima etapa) vai usar para escrever o roteiro de verdade.\n\n---\n\n## Passo 0 \u2014 Observa\u00e7\u00e3o sobre a oferta\n\nAntes de tudo: o produto passa no teste do One Belief porque tem uma **Nova Oportunidade real** \u2014 a maioria das ferramentas financeiras (planilha, extrato, ERP b\u00e1sico) s\u00f3 mostra o **passado/presente** (\"quanto voc\u00ea j\u00e1 gastou\"). A promessa de **prever o futuro do caixa com IA e avisar antes do rombo acontecer** \u00e9 um mecanismo genuinamente diferente, n\u00e3o uma reformula\u00e7\u00e3o de \"organize suas finan\u00e7as\". Isso \u00e9 o que sustenta a pe\u00e7a inteira \u2014 vale proteger esse \u00e2ngulo e n\u00e3o deixar a IA virar s\u00f3 um selo de modernidade (\"agora com IA!\") em vez do her\u00f3i da hist\u00f3ria.\n\nUsei `[Nome do Software]` como placeholder \u2014 troque pelo nome real antes de escrever o roteiro.\n\n---\n\n## 1. One Belief (a Estrela do Norte do VSL)\n\n> **[Prever a falta de caixa antes que ela aconte\u00e7a]** \u00e9 a chave para **[o pequeno empres\u00e1rio parar de viver apagando inc\u00eandio no fim do m\u00eas e ter paz financeira de verdade]**, e s\u00f3 \u00e9 poss\u00edvel atrav\u00e9s de **[[Nome do Software], que usa intelig\u00eancia artificial para analisar seu fluxo de caixa e avisar com dias ou semanas de anteced\u00eancia quando o dinheiro vai faltar]**.\n\nEsse \u00e9 o crit\u00e9rio-guia: qualquer bloco do roteiro que n\u00e3o reforce essa cren\u00e7a (\"d\u00e1 pra prever o aperto antes dele chegar, e s\u00f3 com IA isso \u00e9 poss\u00edvel\") deve ser cortado ou reescrito.\n\n---\n\n## 2. As Dez Perguntas \u2014 \u00e2ngulo de cada resposta\n\n### Bloco 1 (Perguntas 1\u20134) \u2014 abrir o VSL e ganhar o direito de continuar\n\n**1. Como isso \u00e9 diferente de tudo que eu j\u00e1 vi?**\nN\u00e3o \u00e9 \"mais um app de controle financeiro\" que mostra o extrato bonito. \u00c9 o primeiro que funciona como um **radar/meteorologista financeiro**: em vez de te dizer o que j\u00e1 aconteceu, ele te avisa a tempestade *antes* dela chegar \u2014 com semanas de anteced\u00eancia. Essa \u00e9 a novidade que precisa aparecer j\u00e1 no headline/nos primeiros segundos do VSL.\n\n**2. O que tenho a ganhar com isso?**\nNunca mais ser pego de surpresa no fim do m\u00eas. Saber, com anteced\u00eancia real, se vai faltar dinheiro para pagar fornecedor, imposto ou folha \u2014 e ter tempo de agir (renegociar, antecipar um receb\u00edvel, cortar um custo) em vez de correr atr\u00e1s no dia 29. A grande promessa \u00e9 **previsibilidade + tempo de rea\u00e7\u00e3o**, n\u00e3o \"organiza\u00e7\u00e3o\" gen\u00e9rica. Precisa estar nos primeiros ~60-90 segundos do VSL.\n\n**3. Como sei que isso \u00e9 verdade?**\nNunca jogar dado nu (\"modelo com 92% de acur\u00e1cia\") \u2014 embrulhar em ABT:\n- **E** \u2014 um empres\u00e1rio achava que tinha caixa suficiente para fechar o m\u00eas;\n- **Mas** \u2014 o app identificou, 3 semanas antes, um padr\u00e3o de atraso nos receb\u00edveis que ia gerar um rombo espec\u00edfico (com valor e data);\n- **Portanto** \u2014 ele teve tempo de antecipar um receb\u00edvel/renegociar um prazo e fechou o m\u00eas sem aperto.\nUse um case real (ou simulado de forma veross\u00edmil) de um empres\u00e1rio parecido com a persona-alvo. Se houver dado de acur\u00e1cia do modelo, ele entra *depois* da hist\u00f3ria, como refor\u00e7o \u2014 nunca como abertura da prova.\n\n**4. Por que n\u00e3o estou tendo sucesso?**\nAqui \u00e9 onde a maioria das VSLs de finan\u00e7as erra: **nunca insinuar que o aperto \u00e9 culpa de m\u00e1 gest\u00e3o do empres\u00e1rio**. O verdadeiro problema (invertendo a Pergunta 1): toda ferramenta que ele j\u00e1 usou \u2014 planilha, extrato do banco, contador uma vez por m\u00eas \u2014 s\u00f3 mostra o passado. Ele n\u00e3o vive apertado porque n\u00e3o sabe gerir dinheiro; ele vive apertado porque **nunca teve um radar**, s\u00f3 o retrovisor. Ningu\u00e9m dirige olhando s\u00f3 pra tr\u00e1s. Isso tira a culpa e aponta a causa raiz certa: aus\u00eancia de previs\u00e3o, n\u00e3o falta de compet\u00eancia.\n\n### Bloco 2 (Perguntas 5\u20137) \u2014 fechar a venda emocional (~primeiro ter\u00e7o do VSL)\n\n**5. Quem \u00e9 o culpado?**\nO inimigo comum n\u00e3o \u00e9 uma pessoa \u2014 \u00e9 o **modelo de \"gest\u00e3o financeira de espelho retrovisor\"**: planilhas engessadas, extratos banc\u00e1rios e sistemas cont\u00e1beis feitos h\u00e1 d\u00e9cadas para s\u00f3 registrar o que j\u00e1 aconteceu, nunca para prever. Esse \u00e9 um vil\u00e3o real e proporcional (uma pr\u00e1tica de mercado obsoleta), coerente com uma frustra\u00e7\u00e3o que o p\u00fablico-alvo j\u00e1 sente (\"eu s\u00f3 descubro o problema quando ele j\u00e1 est\u00e1 em cima de mim\"). Evitar apontar bancos, contadores ou concorrentes espec\u00edficos como vil\u00f5es pessoais \u2014 o alvo \u00e9 o *sistema/modelo* ultrapassado.\n\n**6. Por que agora?**\nAncorar em algo concreto, n\u00e3o em \"compre logo\":\n- Avan\u00e7o recente de IA aplicada a previs\u00e3o financeira e a chegada do Open Finance no Brasil tornaram poss\u00edvel, pela primeira vez, um pequeno neg\u00f3cio ter acesso a um tipo de forecasting que antes s\u00f3 grande empresa com CFO e time de BI tinha.\n- Refor\u00e7ar com sazonalidade real do calend\u00e1rio do pequeno empres\u00e1rio (fechamento de m\u00eas, 13\u00ba sal\u00e1rio, impostos de fim/in\u00edcio de ano) como o momento em que o risco de aperto \u00e9 maior \u2014 o VSL pode amarrar a urg\u00eancia a esse calend\u00e1rio espec\u00edfico em vez de um gen\u00e9rico \"n\u00e3o perca essa chance\".\n- Se houver uma janela real de oferta (turma de onboarding, condi\u00e7\u00e3o de lan\u00e7amento com data), usar esse evento como o \"ou-ou\": ou o empres\u00e1rio entra agora e j\u00e1 tem visibilidade do pr\u00f3ximo ciclo de caixa, ou enfrenta o pr\u00f3ximo fechamento de m\u00eas do jeito de sempre.\n\n**7. Por que eu deveria confiar em voc\u00ea?**\nCombinar duas hist\u00f3rias de credibilidade:\n- **\"J\u00e1 Passei Por Isso\"** (a principal) \u2014 o fundador/a empresa nasceu porque algu\u00e9m viveu o aperto de caixa na pele tocando um pequeno neg\u00f3cio, foi pego de surpresa mais de uma vez, e decidiu construir a ferramenta que gostaria de ter tido na \u00e9poca. Fechar com um case de um cliente \"comum\" (n\u00e3o um caso extraordin\u00e1rio) mostrando que qualquer pequeno empres\u00e1rio consegue o mesmo resultado.\n- **Especialista** (refor\u00e7o) \u2014 se houver, credenciais t\u00e9cnicas do time por tr\u00e1s do modelo de IA/dados (experi\u00eancia em fintech, dados banc\u00e1rios, Open Finance) para sustentar que a previs\u00e3o n\u00e3o \u00e9 \"achismo de app\", \u00e9 engenharia s\u00e9ria.\n\n### Bloco 3 (Perguntas 8\u201310) \u2014 justifica\u00e7\u00e3o l\u00f3gica, oferta e fechamento\n\n**8. Como funciona?**\nAncorar em uma cren\u00e7a que o p\u00fablico j\u00e1 tem: todo empres\u00e1rio j\u00e1 sabe, instintivamente, que \"d\u00e1 pra perceber um problema chegando se voc\u00ea olhar os padr\u00f5es certos\" \u2014 ele s\u00f3 nunca teve tempo/dados organizados pra fazer isso sozinho. Explicar em passo a passo simples (e em ABT, n\u00e3o como manual t\u00e9cnico):\n1. O software se conecta \u00e0s contas e aos compromissos futuros (via Open Finance / cadastro de contas a pagar e receber).\n2. A IA aprende o padr\u00e3o real de entrada e sa\u00edda de caixa daquele neg\u00f3cio espec\u00edfico (n\u00e3o uma m\u00e9dia gen\u00e9rica de mercado).\n3. Ela projeta o saldo de caixa dos pr\u00f3ximos dias/semanas e identifica o ponto exato em que a curva projetada cruza zero.\n4. Antes desse ponto chegar, o sistema dispara um alerta \u2014 com valor estimado do rombo e a data prov\u00e1vel \u2014 dando tempo real de rea\u00e7\u00e3o.\nRefor\u00e7ar com prova externa curta (ex.: men\u00e7\u00e3o a como Open Finance/IA de previs\u00e3o j\u00e1 \u00e9 usado por grandes players, agora acess\u00edvel ao pequeno neg\u00f3cio).\n\n**9. Como posso come\u00e7ar? (a oferta)**\nEstrutura recomendada da se\u00e7\u00e3o de oferta:\n1. Apresentar a oferta principal ([Nome do Software], plano de assinatura).\n2. Mostrar como \u00e9 o acesso/uso (app ou painel, conex\u00e3o simples via Open Finance).\n3. Depoimentos espec\u00edficos sobre o produto (n\u00e3o s\u00f3 sobre \"resultado financeiro gen\u00e9rico\").\n4. Ancorar um pre\u00e7o de refer\u00eancia alto (ex.: custo de contratar um analista financeiro/CFO fracionado para fazer esse tipo de proje\u00e7\u00e3o manualmente).\n5. B\u00f4nus S.I.N. (Superiores, Irresist\u00edveis, No-brainer) \u2014 por exemplo: checklist \"o que fazer quando o alerta disparar\", templates de mensagem para renegociar prazo com fornecedor, onboarding assistido de configura\u00e7\u00e3o inicial.\n6. Escada de valor somando cada item antes de revelar o pre\u00e7o final.\n7. Pre\u00e7o final da assinatura.\n8. Garantia (invers\u00e3o de risco) \u2014 ex.: teste gratuito por N dias ou garantia de devolu\u00e7\u00e3o, eliminando o risco de \"e se n\u00e3o funcionar pro meu neg\u00f3cio\".\n\n**10. O que eu tenho a perder? (fechamento push-pull)**\nAntes do fechamento, reativar o One Belief: lembrar que prever o aperto antes que ele chegue \u00e9 a diferen\u00e7a entre reagir e se antecipar. Depois, aplicar push-pull sem soar desesperado:\n- **Push** \u2014 deixar claro que a ferramenta n\u00e3o \u00e9 para quem quer continuar administrando o neg\u00f3cio \"no feeling\" nem para quem n\u00e3o vai agir com o alerta quando ele chegar; a decis\u00e3o \u00e9 do espectador.\n- **Pull** \u2014 lembrar o custo de continuar sem visibilidade: o pr\u00f3ximo fim de m\u00eas vai chegar de qualquer forma, com ou sem aviso pr\u00e9vio.\n- Fechamento em 3 op\u00e7\u00f5es, sem indicar qual escolher:\n  1. Continuar administrando o caixa no escuro, torcendo para n\u00e3o ser pego de surpresa de novo.\n  2. Tentar montar sozinho uma planilha de proje\u00e7\u00e3o de caixa (trabalhoso, exige tempo e disciplina que o dia a dia do neg\u00f3cio n\u00e3o deixa sobrar).\n  3. Deixar a IA de [Nome do Software] rodar essa previs\u00e3o automaticamente e avisar com anteced\u00eancia.\n\n---\n\n## 3. Como isso vira a estrutura do VSL\n\nAs dez perguntas, respondidas em ordem, j\u00e1 s\u00e3o o roteiro \u2014 n\u00e3o \u00e9 preciso inventar uma estrutura \u00e0 parte:\n\n| Bloco do VSL | Perguntas | Conte\u00fado |\n|---|---|---|\n| Abertura (gancho) | 1 \u2192 2 | Novidade (radar de caixa via IA) \u2192 grande promessa (nunca mais ser pego de surpresa) |\n| Prova inicial | 3 | Case em ABT provando que a previs\u00e3o funciona |\n| Vira a culpa | 4 | \"N\u00e3o \u00e9 falta de gest\u00e3o, \u00e9 falta de radar\" |\n| Venda emocional | 5 \u2192 6 \u2192 7 | Inimigo (ferramentas de retrovisor) \u2192 urg\u00eancia real (Open Finance + calend\u00e1rio financeiro) \u2192 credibilidade (J\u00e1 Passei Por Isso + Especialista) |\n| Justifica\u00e7\u00e3o l\u00f3gica | 8 | Como a IA prev\u00ea o rombo, passo a passo, em ABT |\n| Oferta | 9 | Produto + ancoragem de pre\u00e7o + b\u00f4nus S.I.N. + garantia |\n| Fechamento | 10 | Reativa o One Belief \u2192 push-pull \u2192 3 op\u00e7\u00f5es, sem soar desesperado |\n\n**Regra pr\u00e1tica de posicionamento no VSL:** perguntas 1 e 2 precisam estar resolvidas nos primeiros 60-90 segundos (\u00e9 a \u00fanica janela real de impacto emocional forte); perguntas 1-7 costumam ocupar o primeiro ter\u00e7o do v\u00eddeo (fecha a venda emocional); perguntas 8-10 fecham o roteiro (cobertura l\u00f3gica, oferta, fechamento).\n\n---\n\n## 4. Pontos de aten\u00e7\u00e3o para quando for escrever o roteiro final\n\n- **Toda prova (Pergunta 3) e toda explica\u00e7\u00e3o do mecanismo (Pergunta 8) devem vir em estrutura ABT** (E \u2192 Mas \u2192 Portanto) \u2014 nunca um dado ou print de tela \"nu\".\n- **Nunca implicar que o aperto de caixa passado foi culpa do empres\u00e1rio** (Pergunta 4) \u2014 o vil\u00e3o \u00e9 a falta de ferramenta preditiva, n\u00e3o a falta de disciplina dele.\n- **O inimigo comum (Pergunta 5) precisa ser proporcional** \u2014 mirar no modelo/sistema ultrapassado de gest\u00e3o financeira, nunca em pessoas, bancos espec\u00edficos ou grupos.\n- **A urg\u00eancia (Pergunta 6) precisa estar ancorada em algo concreto** (Open Finance, calend\u00e1rio fiscal, janela real de oferta) \u2014 nunca em \"compre logo\" vazio.\n- **O fechamento (Pergunta 10) n\u00e3o pode soar desesperado** \u2014 apresentar as op\u00e7\u00f5es e deixar a decis\u00e3o com o espectador \u00e9 o que, paradoxalmente, aumenta a convers\u00e3o.\n\n---\n\n## Pr\u00f3ximo passo\n\nCom esse mapa fechado, o pr\u00f3ximo passo \u00e9 escrever o roteiro final se\u00e7\u00e3o por se\u00e7\u00e3o, seguindo essa ordem \u2014 se quiser, j\u00e1 posso come\u00e7ar pelo bloco de abertura (Perguntas 1-2, os primeiros 60-90 segundos do VSL) assim que voc\u00ea confirmar o nome do produto e, se tiver, algum case real de cliente para a Pergunta 3.\n"}], "grading": null}, {"id": "eval-planejamento-vsl-without_skill", "prompt": "preciso estruturar o script de um VSL pra vender um software de gest\u00e3o financeira pra pequenos empres\u00e1rios que ficam no aperto no fim do m\u00eas. o diferencial dele \u00e9 que ele usa IA pra avisar com anteced\u00eancia quando vai faltar caixa. me ajuda a planejar a estrutura inteira antes de eu escrever o roteiro final?", "eval_id": 1, "outputs": [{"name": "output.md", "type": "text", "content": "# Estrutura de VSL \u2014 Software de Gest\u00e3o Financeira com IA Preditiva de Caixa\n\nPlanejamento estrat\u00e9gico antes da escrita do roteiro final. Objetivo: organizar avatar, promessa, mecanismo \u00fanico, arco narrativo e blocos do VSL, com o \"porqu\u00ea\" de cada decis\u00e3o, para que o roteiro final seja s\u00f3 preencher a estrutura.\n\n---\n\n## 1. Premissas que precisam estar fechadas antes de escrever\n\nAntes de estruturar blocos, vale travar 4 respostas \u2014 elas v\u00e3o determinar o tom do roteiro inteiro:\n\n1. **Quem exatamente \u00e9 o avatar?** \"Pequeno empres\u00e1rio\" \u00e9 amplo demais para um VSL forte. Vale decidir se \u00e9 com\u00e9rcio, servi\u00e7o, e-commerce, prestador aut\u00f4nomo com CNPJ \u2014 o exemplo de dor muda (estoque parado vs. cliente que n\u00e3o paga vs. imposto atrasado).\n2. **Qual \u00e9 a dor de pico (o \"momento zero\")?** Provavelmente \u00e9 a virada do m\u00eas: boleto de fornecedor, folha de pagamento, aluguel \u2014 e o saldo n\u00e3o fecha. Esse instante espec\u00edfico (dia 5, olhando o extrato, calculadora na m\u00e3o) \u00e9 o gancho emocional do v\u00eddeo inteiro.\n3. **Qual \u00e9 o \"vil\u00e3o\" da hist\u00f3ria?** Em VSL, precisa de um inimigo claro que n\u00e3o seja o pr\u00f3prio empres\u00e1rio (sen\u00e3o gera vergonha/resist\u00eancia, n\u00e3o abertura). Bons candidatos: \"planilha\", \"achismo\", \"descobrir o problema tarde demais\", \"contador que s\u00f3 entrega relat\u00f3rio do m\u00eas passado\".\n4. **Qual \u00e9 o mecanismo \u00fanico (Unique Mechanism)?** N\u00e3o \u00e9 \"o software\". \u00c9 *como* ele resolve o que os outros n\u00e3o resolvem \u2014 aqui, a resposta natural \u00e9: **previs\u00e3o de caixa por IA com anteced\u00eancia**, versus concorrentes que s\u00f3 mostram o passado (relat\u00f3rio) ou o presente (saldo de hoje). Esse \u00e9 o eixo que sustenta a VSL inteira.\n\nSugest\u00e3o de nome para o mecanismo (pra usar no roteiro, precisa soar propriet\u00e1rio, n\u00e3o gen\u00e9rico):\n- \"Radar de Caixa\"\n- \"Alerta Preditivo\"\n- \"Sistema de Antecipa\u00e7\u00e3o Financeira\"\n- algo como \"[Nome do Software] + IA de Previs\u00e3o de [X] dias\"\n\nEscolher um nome e repeti-lo sempre da mesma forma \u2014 isso vira o \"produto dentro do produto\" (a feature vend\u00e1vel).\n\n---\n\n## 2. Big Idea (a frase que resume a VSL inteira)\n\nToda VSL boa nasce de uma Big Idea \u2014 uma promessa/\u00e2ngulo que \u00e9 ao mesmo tempo verdadeira, espec\u00edfica e diferente do que o mercado j\u00e1 ouviu (\"controle suas finan\u00e7as\", \"organize seu caixa\" \u2014 clich\u00eas que o avatar j\u00e1 ignora).\n\n\u00c2ngulo sugerido para este produto:\n\n> **\"E se voc\u00ea soubesse, com semanas de anteced\u00eancia, exatamente o dia em que vai faltar dinheiro no caixa \u2014 antes que isso vire uma crise?\"**\n\nEssa Big Idea j\u00e1 cont\u00e9m:\n- O diferencial real (anteced\u00eancia / previs\u00e3o, n\u00e3o relat\u00f3rio do passado)\n- Uma emo\u00e7\u00e3o (al\u00edvio de saber antes / fim da surpresa)\n- Uma implica\u00e7\u00e3o l\u00f3gica de produto (IA)\n\nTodo bloco do VSL deve refor\u00e7ar essa ideia, direta ou indiretamente.\n\n---\n\n## 3. Estrutura geral do VSL (vis\u00e3o macro)\n\nDura\u00e7\u00e3o alvo sugerida: **12 a 18 minutos** (VSL de oferta B2B/prosumer de ticket m\u00e9dio costuma performar melhor nessa faixa \u2014 longo o suficiente pra educar sobre o mecanismo \u00fanico, curto o suficiente pra n\u00e3o perder empres\u00e1rio ocupado).\n\nBlocos, em ordem, com fun\u00e7\u00e3o de cada um:\n\n| # | Bloco | Fun\u00e7\u00e3o | Tempo aprox. |\n|---|-------|--------|--------------|\n| 1 | Hook / Abertura de padr\u00e3o | Prender aten\u00e7\u00e3o nos primeiros 10-15s | 0:00\u20130:30 |\n| 2 | Promessa + Big Idea | Dizer o que a pessoa vai aprender/ganhar | 0:30\u20131:30 |\n| 3 | Identifica\u00e7\u00e3o da dor (agita\u00e7\u00e3o) | Fazer o avatar se reconhecer na dor | 1:30\u20134:00 |\n| 4 | Por que as solu\u00e7\u00f5es atuais falham | Derrubar alternativas (planilha, contador, feeling, outros apps) | 4:00\u20136:00 |\n| 5 | Virada / descoberta do mecanismo | Introduzir a IA preditiva como \"a pe\u00e7a que faltava\" | 6:00\u20137:30 |\n| 6 | Credibilidade / origem | Por que voc\u00ea (ou a empresa) pode entregar isso | 7:30\u20139:00 |\n| 7 | Como funciona (mecanismo \u00fanico) | Explicar a l\u00f3gica da previs\u00e3o de caixa por IA | 9:00\u201311:00 |\n| 8 | Prova social / resultados | Depoimentos, n\u00fameros, casos | 11:00\u201313:00 |\n| 9 | Apresenta\u00e7\u00e3o da oferta | O que a pessoa recebe | 13:00\u201314:30 |\n| 10 | Empilhamento de valor + b\u00f4nus | Aumentar valor percebido vs. pre\u00e7o | 14:30\u201315:30 |\n| 11 | Pre\u00e7o + ancoragem | Justificar o investimento | 15:30\u201316:30 |\n| 12 | Garantia | Remover o risco | 16:30\u201317:00 |\n| 13 | Urg\u00eancia / escassez | Motivo pra agir agora | 17:00\u201317:30 |\n| 14 | CTA final + recapitula\u00e7\u00e3o | Fechar com clareza do pr\u00f3ximo passo | 17:30\u201318:00 |\n\nAbaixo, cada bloco detalhado com o que precisa conter.\n\n---\n\n## 4. Detalhamento bloco a bloco\n\n### Bloco 1 \u2014 Hook (0:00\u20130:30)\nObjetivo: nos primeiros 5-10 segundos, o avatar precisa pensar \"isso \u00e9 sobre mim\".\n\nCaminhos poss\u00edveis para o gancho (escolher 1, n\u00e3o misturar):\n- **Gancho de dor espec\u00edfica**: come\u00e7ar descrevendo a cena do dia 5 do m\u00eas, olhando o extrato, sem saber se vai fechar a folha.\n- **Gancho de pergunta provocativa**: \"Voc\u00ea sabe, hoje, se vai ter dinheiro em caixa daqui 20 dias? Se a resposta for 'n\u00e3o tenho certeza', esse v\u00eddeo \u00e9 pra voc\u00ea.\"\n- **Gancho de estat\u00edstica/choque**: dado real sobre % de pequenas empresas que fecham por problema de fluxo de caixa (vale pesquisar fonte confi\u00e1vel antes de usar n\u00famero).\n- **Gancho de promessa direta**: \"Nos pr\u00f3ximos minutos vou te mostrar como saber, com semanas de anteced\u00eancia, se vai faltar caixa \u2014 antes que isso vire um problema.\"\n\nRecomenda\u00e7\u00e3o: abrir com a cena de dor (gera identifica\u00e7\u00e3o imediata) e emendar com a promessa de anteced\u00eancia logo em seguida \u2014 combina 2 caminhos em 15-20s.\n\n### Bloco 2 \u2014 Promessa + Big Idea (0:30\u20131:30)\n- Anunciar claramente o que ser\u00e1 mostrado no v\u00eddeo (efeito \"sum\u00e1rio\", reduz abandono).\n- Introduzir a Big Idea sem ainda revelar o produto por nome.\n- Frase de transi\u00e7\u00e3o tipo: \"E o segredo n\u00e3o \u00e9 'organizar melhor a planilha' \u2014 \u00e9 enxergar o problema antes dele existir.\"\n\n### Bloco 3 \u2014 Agita\u00e7\u00e3o da dor (1:30\u20134:00)\nEsse \u00e9 o bloco mais importante emocionalmente. Estrutura sugerida (f\u00f3rmula \"Problema \u2192 Consequ\u00eancia \u2192 Sentimento\"):\n\n- Listar 3-5 sintomas concretos e reconhec\u00edveis do avatar:\n  - Antecipar boleto no cheque especial / empr\u00e9stimo caro\n  - Atrasar fornecedor e perder desconto ou condi\u00e7\u00e3o\n  - Descobrir o rombo s\u00f3 quando j\u00e1 \u00e9 tarde pra agir\n  - Trabalhar o m\u00eas inteiro e n\u00e3o saber se sobrou algo\n  - Ansiedade recorrente perto do fechamento do m\u00eas\n- Escalar para a consequ\u00eancia maior: n\u00e3o \u00e9 s\u00f3 dinheiro, \u00e9 a sensa\u00e7\u00e3o de estar sempre \"apagando inc\u00eandio\", o medo de n\u00e3o conseguir pagar a equipe, o desgaste com s\u00f3cio/fam\u00edlia.\n- Fechar o bloco nomeando o problema raiz: **\"Voc\u00ea n\u00e3o tem um problema de dinheiro. Voc\u00ea tem um problema de visibilidade \u2014 voc\u00ea s\u00f3 descobre o problema quando ele j\u00e1 aconteceu.\"** Essa frase \u00e9 o piv\u00f4 que justifica todo o resto da VSL.\n\n### Bloco 4 \u2014 Por que as solu\u00e7\u00f5es atuais falham (4:00\u20136:00)\nDerrubar, uma a uma, as alternativas que o avatar j\u00e1 tentou \u2014 sem soar arrogante, e sim \"eu entendo, eu j\u00e1 tentei isso tamb\u00e9m\":\n\n- **Planilha**: exige disciplina di\u00e1ria, atualiza o passado, n\u00e3o avisa nada.\n- **Contador tradicional**: entrega relat\u00f3rio de 30-60 dias atr\u00e1s \u2014 bom pra imposto, in\u00fatil pra decis\u00e3o do dia a dia.\n- **Feeling/experi\u00eancia**: funciona at\u00e9 n\u00e3o funcionar; empres\u00e1rio n\u00e3o tem bola de cristal.\n- **Outros softwares financeiros**: mostram saldo atual e hist\u00f3rico bonito em gr\u00e1fico, mas continuam sendo espelho do retrovisor \u2014 \"dizem o que j\u00e1 aconteceu, n\u00e3o o que vai acontecer\".\n\nFechar com a virada de mecanismo: \"O problema nunca foi falta de informa\u00e7\u00e3o. Foi informa\u00e7\u00e3o chegando tarde demais.\"\n\n### Bloco 5 \u2014 Virada / introdu\u00e7\u00e3o do mecanismo \u00fanico (6:00\u20137:30)\nAqui entra a IA como resposta l\u00f3gica ao problema levantado nos blocos 3 e 4 \u2014 n\u00e3o como \"mais uma feature\", mas como a pe\u00e7a que faltava.\n\n- Refor\u00e7ar a Big Idea: \"E se, em vez de olhar pra tr\u00e1s, o sistema olhasse pra frente?\"\n- Nomear o mecanismo (ex.: \"Alerta Preditivo de Caixa\") \u2014 a partir daqui, sempre chamar por esse nome.\n- Ainda sem detalhar tecnicamente \u2014 s\u00f3 plantar a promessa central: prever com dias/semanas de anteced\u00eancia quando o caixa vai ficar negativo, cruzando entradas previstas, sa\u00eddas recorrentes, sazonalidade e comportamento hist\u00f3rico.\n\n### Bloco 6 \u2014 Credibilidade / origem da solu\u00e7\u00e3o (7:30\u20139:00)\nO avatar pequeno empres\u00e1rio \u00e9 c\u00e9tico com \"mais um app\". Precisa de motivo pra acreditar:\n\n- Quem criou / por que criou (dor de origem: um fundador que tamb\u00e9m passou aperto de caixa, ou que via isso destruindo neg\u00f3cios de clientes).\n- Tempo de mercado, n\u00famero de empresas atendidas, especializa\u00e7\u00e3o no p\u00fablico (se aplic\u00e1vel).\n- Se houver: men\u00e7\u00e3o a experi\u00eancia pr\u00e9via relevante (fintech, contabilidade, gest\u00e3o) \u2014 sem exagerar, s\u00f3 o suficiente pra gerar confian\u00e7a.\n\nSe n\u00e3o houver hist\u00f3ria de fundador forte, substituir por credibilidade de dados/tecnologia: quantidade de transa\u00e7\u00f5es analisadas pelo modelo de IA, precis\u00e3o m\u00e9dia das previs\u00f5es, etc.\n\n### Bloco 7 \u2014 Como funciona o mecanismo (9:00\u201311:00)\nExplicar de forma simples (linguagem de empres\u00e1rio, n\u00e3o de engenheiro de dados):\n\n- Passo 1: conecta contas/entradas e sa\u00eddas (bancos, boletos, recorr\u00eancias).\n- Passo 2: a IA aprende o padr\u00e3o do neg\u00f3cio (sazonalidade, ciclo de recebimento, despesas fixas x vari\u00e1veis).\n- Passo 3: projeta o saldo futuro dia a dia e identifica o ponto exato onde ele fica negativo.\n- Passo 4: avisa com anteced\u00eancia (dias/semanas) \u2014 n\u00e3o s\u00f3 \"vai faltar dinheiro\", mas quando, quanto, e idealmente sugest\u00f5es do que fazer (antecipar receb\u00edvel, renegociar prazo, cortar gasto X).\n\nBoa pr\u00e1tica: usar uma analogia simples pra fixar o mecanismo \u2014 ex. \"\u00e9 como um GPS: n\u00e3o muda o tr\u00e2nsito, mas te avisa a tempo de escolher outro caminho.\" ou \"previs\u00e3o do tempo pro seu caixa: voc\u00ea n\u00e3o evita a chuva, mas leva o guarda-chuva.\"\n\nSe houver print/demonstra\u00e7\u00e3o de tela, este \u00e9 o bloco pra mostrar (ver se\u00e7\u00e3o 6, \"Elementos de prova visual\").\n\n### Bloco 8 \u2014 Prova social (11:00\u201313:00)\n- Depoimentos de clientes reais (idealmente em v\u00eddeo, com nome, neg\u00f3cio, resultado espec\u00edfico \u2014 n\u00fameros concretos convertem mais que elogio gen\u00e9rico: \"parei de usar cheque especial\", \"economizei X em juros\", \"consegui negociar fornecedor 10 dias antes do aperto\").\n- Se houver, dado agregado: \"X empresas j\u00e1 usam\", \"R$ X em rombos de caixa evitados\", \"precis\u00e3o de X% nas previs\u00f5es\".\n- Print de tela / dashboard refor\u00e7a a percep\u00e7\u00e3o de produto real (n\u00e3o promessa vazia).\n\nNota: se ainda n\u00e3o houver depoimentos fortes nessa fase do produto, este bloco pode ser substitu\u00eddo por \"prova de mecanismo\" (explica\u00e7\u00e3o mais t\u00e9cnica de por que a previs\u00e3o funciona) ou por prova de autoridade (men\u00e7\u00e3o em imprensa, pr\u00eamio, parceria).\n\n### Bloco 9 \u2014 Apresenta\u00e7\u00e3o da oferta (13:00\u201314:30)\n- Nome do produto, o que \u00e9 em uma frase.\n- O que a pessoa recebe ao assinar (funcionalidades centrais, sempre voltando pro mecanismo \u00fanico como headline, e as outras features como suporte: fluxo de caixa, concilia\u00e7\u00e3o, categoriza\u00e7\u00e3o autom\u00e1tica, relat\u00f3rios, etc.).\n- Refor\u00e7ar simplicidade de uso (\"n\u00e3o precisa saber de finan\u00e7as, n\u00e3o precisa digitar nada manualmente\" \u2014 se for verdade do produto).\n\n### Bloco 10 \u2014 Empilhamento de valor e b\u00f4nus (14:30\u201315:30)\n- Somar valor percebido antes de mostrar pre\u00e7o (ex.: \"implementa\u00e7\u00e3o assistida\", \"suporte especializado\", \"modelo de fluxo de caixa pronto\", \"checklist de sa\u00fade financeira\", per\u00edodo de teste estendido).\n- Cada b\u00f4nus deve remover uma obje\u00e7\u00e3o espec\u00edfica (b\u00f4nus de onboarding remove \"n\u00e3o vou saber usar\"; b\u00f4nus de suporte remove \"vou ficar sozinho\").\n\n### Bloco 11 \u2014 Pre\u00e7o e ancoragem (15:30\u201316:30)\n- Ancorar contra o custo de *n\u00e3o* ter a solu\u00e7\u00e3o (custo de 1 aperto de caixa: juros de cheque especial, fornecedor perdido, estresse) \u2014 comparar valor mensal do software com esse custo evitado.\n- Apresentar pre\u00e7o com clareza, sem rodeio excessivo.\n- Se houver planos, simplificar a decis\u00e3o (destacar o plano recomendado).\n\n### Bloco 12 \u2014 Garantia (16:30\u201317:00)\n- Remover o risco da decis\u00e3o: garantia de dias, teste gratuito, cancelamento sem burocracia.\n- Frase de refor\u00e7o: o risco fica com a empresa, n\u00e3o com o empres\u00e1rio.\n\n### Bloco 13 \u2014 Urg\u00eancia / escassez (17:00\u201317:30)\n- Usar apenas se for real (b\u00f4nus por tempo limitado, condi\u00e7\u00e3o de lan\u00e7amento, vagas de onboarding, pre\u00e7o promocional). Urg\u00eancia falsa mina a credibilidade justamente com um p\u00fablico (pequeno empres\u00e1rio) que j\u00e1 \u00e9 c\u00e9tico com \"oferta que some em 10 minutos\".\n\n### Bloco 14 \u2014 CTA final (17:30\u201318:00)\n- Recapitular a Big Idea em uma frase.\n- Instru\u00e7\u00e3o de a\u00e7\u00e3o clara e \u00fanica (n\u00e3o dar 2 op\u00e7\u00f5es de pr\u00f3ximo passo).\n- Fechar reafirmando a transforma\u00e7\u00e3o central: sair de \"descobrir o aperto quando j\u00e1 \u00e9 tarde\" para \"saber com anteced\u00eancia e decidir com calma\".\n\n---\n\n## 5. Tratamento de obje\u00e7\u00f5es (para distribuir ao longo do roteiro, n\u00e3o s\u00f3 no fim)\n\nObje\u00e7\u00f5es prov\u00e1veis desse avatar e onde encaixar a resposta:\n\n| Obje\u00e7\u00e3o | Onde neutralizar |\n|---|---|\n| \"Eu n\u00e3o entendo de tecnologia/IA\" | Bloco 7 (linguagem simples + analogia) |\n| \"J\u00e1 tentei outro app e n\u00e3o funcionou\" | Bloco 4 (diferencia\u00e7\u00e3o clara do mecanismo) |\n| \"N\u00e3o tenho tempo pra configurar mais uma ferramenta\" | Bloco 9/10 (simplicidade + b\u00f4nus de onboarding) |\n| \"Meu neg\u00f3cio \u00e9 pequeno demais pra isso\" | Bloco 3 ou prova social (mostrar casos de neg\u00f3cios pequenos/similares) |\n| \"\u00c9 caro\" | Bloco 11 (ancoragem no custo do problema, n\u00e3o no pre\u00e7o isolado) |\n| \"E se n\u00e3o funcionar pra mim?\" | Bloco 12 (garantia) |\n| \"Isso \u00e9 s\u00f3 mais uma promessa de app financeiro\" | Bloco 6 e 8 (credibilidade + prova concreta) |\n\n---\n\n## 6. Elementos de prova visual a levantar antes de escrever o roteiro\n\nComo \u00e9 VSL (v\u00eddeo, n\u00e3o s\u00f3 \u00e1udio/texto), vale j\u00e1 mapear o que vai aparecer na tela em paralelo \u00e0 narra\u00e7\u00e3o:\n\n- Print/grava\u00e7\u00e3o de tela do alerta de previs\u00e3o em a\u00e7\u00e3o (o momento em que o sistema avisa \"faltar\u00e3o R$X em Y dias\").\n- Gr\u00e1fico simples comparando \"vis\u00e3o tradicional (retrovisor)\" vs. \"vis\u00e3o preditiva (radar)\".\n- Depoimentos em v\u00eddeo ou pelo menos print de mensagens reais de clientes.\n- N\u00famero/estat\u00edstica de mercado sobre inadimpl\u00eancia ou fal\u00eancia por fluxo de caixa (com fonte).\n- Tela de onboarding simples, pra refor\u00e7ar facilidade de uso.\n\n---\n\n## 7. Estilo de narra\u00e7\u00e3o e tom\n\n- Falar como um empres\u00e1rio fala com outro empres\u00e1rio \u2014 evitar jarg\u00e3o de fintech/BI.\n- Tom: emp\u00e1tico, nunca de \"culpa\" (a pessoa n\u00e3o est\u00e1 no aperto porque \u00e9 incompetente \u2014 est\u00e1 porque nunca teve visibilidade).\n- Ritmo: frases curtas na agita\u00e7\u00e3o da dor (bloco 3), frases mais explicativas e pausadas na parte de mecanismo (bloco 7).\n- Repetir a Big Idea (anteced\u00eancia / prever antes de faltar) em pelo menos 4-5 momentos-chave do roteiro, sempre com as mesmas palavras \u2014 repeti\u00e7\u00e3o fixa a mensagem.\n\n---\n\n## 8. Checklist antes de partir pro roteiro final\n\n- [ ] Avatar espec\u00edfico definido (tipo de neg\u00f3cio, porte, faturamento aproximado)\n- [ ] Nome do mecanismo \u00fanico escolhido e fixado\n- [ ] Big Idea escrita em uma frase \u00fanica\n- [ ] Gancho de abertura escolhido (dor, pergunta, dado ou promessa)\n- [ ] Pelo menos 2-3 depoimentos ou provas reais levantados\n- [ ] Pre\u00e7o, plano e garantia definidos\n- [ ] B\u00f4nus (se houver) mapeados e ligados a obje\u00e7\u00f5es espec\u00edficas\n- [ ] Elementos visuais/prints da tela do produto dispon\u00edveis para roteirizar junto\n- [ ] Dura\u00e7\u00e3o alvo definida (recomendado 12-18 min para este ticket/nicho)\n\n---\n\n## Resumo executivo\n\nA espinha dorsal da VSL \u00e9: **dor concreta de fim de m\u00eas \u2192 diagn\u00f3stico de que o problema real \u00e9 falta de anteced\u00eancia, n\u00e3o falta de esfor\u00e7o \u2192 introdu\u00e7\u00e3o da IA preditiva como o mecanismo que resolve exatamente essa lacuna \u2192 prova de que funciona \u2192 oferta com risco removido \u2192 CTA \u00fanico e claro.**\n\nTudo \u2014 do gancho ao fechamento \u2014 deve refor\u00e7ar a mesma ideia central: o produto n\u00e3o \u00e9 \"mais um app de gest\u00e3o financeira\", \u00e9 o primeiro que avisa *antes* do aperto acontecer, n\u00e3o depois.\n\nCom essa estrutura fechada, o pr\u00f3ximo passo \u00e9 escrever o roteiro final bloco a bloco, j\u00e1 com falas, transi\u00e7\u00f5es e tempos de tela definidos.\n"}], "grading": null}, {"id": "eval-nao-sei-comecar-with_skill", "prompt": "vou lan\u00e7ar um curso de culin\u00e1ria vegana pra iniciantes e preciso escrever a carta de vendas mas n\u00e3o sei nem por onde come\u00e7ar, fico travado numa p\u00e1gina em branco", "eval_id": 2, "outputs": [{"name": "output.md", "type": "text", "content": "# Do zero \u00e0 p\u00e1gina em branco: o mapa da sua carta de vendas\n\nTravar na p\u00e1gina em branco quase sempre \u00e9 sintoma de um problema espec\u00edfico: voc\u00ea est\u00e1 tentando escrever frases antes de ter decidido o que a carta precisa dizer. A sa\u00edda n\u00e3o \u00e9 \"for\u00e7ar a criatividade\" \u2014 \u00e9 planejar em 10-15 minutos, respondendo um conjunto fixo de perguntas, e s\u00f3 depois disso escrever. Uma vez que essas respostas existem, a carta praticamente se escreve sozinha, se\u00e7\u00e3o por se\u00e7\u00e3o.\n\nO m\u00e9todo tem duas etapas: primeiro voc\u00ea define o **One Belief** (a \u00fanica cren\u00e7a que, se o leitor aceitar, torna a compra quase inevit\u00e1vel); depois voc\u00ea responde **dez perguntas em sequ\u00eancia**, que j\u00e1 s\u00e3o a estrutura da carta do in\u00edcio ao fim.\n\nComo n\u00e3o tenho ainda os detalhes reais do seu curso (nome, pre\u00e7o, seu diferencial exato, sua hist\u00f3ria), fiz um **rascunho de trabalho completo** usando um curso de culin\u00e1ria vegana para iniciantes como exemplo plaus\u00edvel. A ideia \u00e9 voc\u00ea usar isso como esqueleto: onde eu chutei algo, est\u00e1 marcado como `[AJUSTAR]` \u2014 voc\u00ea troca pelo que \u00e9 real no seu caso e o resto do racioc\u00ednio j\u00e1 se sustenta.\n\n---\n\n## Passo 1 \u2014 O One Belief\n\nAntes de mais nada, o teste de fogo: voc\u00ea consegue preencher os tr\u00eas elementos abaixo com algo genuinamente \u00fanico? Se a resposta for \"n\u00e3o, \u00e9 s\u00f3 mais um curso de receitas veganas\", vale parar e pensar na oferta antes de escrever \u2014 porque copy n\u00e3o compensa uma ideia sem diferencial.\n\nPara o seu curso, um caminho poss\u00edvel:\n\n- **Nova Oportunidade** (o que \u00e9 \u00fanico): n\u00e3o \u00e9 \"aprenda receitas veganas prontas\" \u2014 \u00e9 um **m\u00e9todo para transformar qualquer receita que a pessoa j\u00e1 ama** (a lasanha da fam\u00edlia, a feijoada, o brigadeiro) numa vers\u00e3o vegana, sem ingrediente importado ou caro. `[AJUSTAR: qual \u00e9 o seu diferencial real \u2014 pode ser outro: um cronograma de transi\u00e7\u00e3o de 21 dias, uma t\u00e9cnica espec\u00edfica de tempero, um sistema anti-desist\u00eancia, etc.]`\n- **Desejo do p\u00fablico-alvo**: comer com prazer e variedade sendo vegano \u2014 sem virar \"aquele chato da mesa\", sem gastar horas cozinhando, sem gastar mais, sem parecer que est\u00e1 de dieta.\n- **Novo Mecanismo**: um sistema de substitui\u00e7\u00e3o por *fun\u00e7\u00e3o do ingrediente* (prote\u00edna, gordura, liga, umami) em vez de decorar receita por receita \u2014 vamos chamar provisoriamente de **\"Mapa de Trocas Inteligentes\"**. `[AJUSTAR: nome real do seu m\u00e9todo/sistema]`\n\n**One Belief montado:**\n\n> *\"Transformar qualquer receita que voc\u00ea j\u00e1 ama em uma vers\u00e3o vegana deliciosa \u00e9 a chave para comer bem, com a fam\u00edlia \u00e0 mesa, sem culpa e sem virar ref\u00e9m da cozinha \u2014 e s\u00f3 \u00e9 poss\u00edvel atrav\u00e9s do Mapa de Trocas Inteligentes.\"*\n\nGuarde essa frase. Ela \u00e9 o crit\u00e9rio para decidir o que entra e o que sai do resto da carta: tudo que refor\u00e7a essa cren\u00e7a fica, tudo que n\u00e3o refor\u00e7a, corta.\n\n---\n\n## Passo 2 \u2014 As dez perguntas (rascunho de \u00e2ngulo, n\u00e3o copy final)\n\nIsto \u00e9 s\u00f3 o racioc\u00ednio de cada resposta em 1-2 linhas \u2014 depois disso vira a estrutura da carta inteira.\n\n**1. Como isso \u00e9 diferente de tudo que j\u00e1 vi?**\nN\u00e3o \u00e9 \"mais um curso de receitas veganas prontas\". \u00c9 um m\u00e9todo que ensina a converter os pratos que a pessoa j\u00e1 cozinha e ama \u2014 n\u00e3o substituir sua cultura alimentar por uma lista de receitas de terceiros.\n\n**2. O que eu tenho a ganhar com isso?**\nContinuar comendo o que ama (incluindo pratos de fam\u00edlia, festas, comfort food), com a fam\u00edlia toda \u00e0 mesa sem reclamar, sem gastar mais, sem virar escrava(o) do fog\u00e3o nem da culpa. `[AJUSTAR ao desejo mais forte da sua persona real: sa\u00fade, \u00e9tica animal, meio ambiente, pele/energia, etc. \u2014 escolha o que pesa mais para quem voc\u00ea est\u00e1 vendendo.]`\n\n**3. Como sei que isso \u00e9 verdade?**\nN\u00e3o jogue dado solto \u2014 embrulhe em ABT (E \u2192 Mas \u2192 Portanto). Exemplo de esqueleto: \"A maioria de quem tenta virar vegana(o) desiste nos primeiros meses (E) \u2014 durante anos achou-se que era falta de for\u00e7a de vontade, mas pesquisas mostram que o motivo real \u00e9 falta de um sistema de substitui\u00e7\u00e3o, n\u00e3o falta de disciplina (Mas) \u2014 quando a pessoa segue um m\u00e9todo estruturado de trocas, a taxa de desist\u00eancia despenca (Portanto).\" `[AJUSTAR: troque por depoimento real de aluna(o) ou dado real que voc\u00ea tenha \u2014 mas mantenha o formato E/Mas/Portanto, nunca dado nu.]`\n\n**4. Por que n\u00e3o estou tendo sucesso?**\nO verdadeiro problema (nunca culpa do leitor): quem tentou antes seguiu receitas prontas de blog/rede social sem entender o *porqu\u00ea* de cada substitui\u00e7\u00e3o \u2014 ent\u00e3o na hora de adaptar o prato de fam\u00edlia trava, erra a m\u00e3o, o prato fica sem gra\u00e7a, e desiste achando que \"n\u00e3o tem jeito para cozinha vegana\". A culpa n\u00e3o \u00e9 da pessoa \u2014 \u00e9 da falta de um m\u00e9todo, n\u00e3o de receitas soltas.\n\n**5. Quem \u00e9 o culpado?**\nO inimigo comum: a cultura de \"veganismo de influencer\" que vende a ideia de que comer vegano exige ingrediente caro, importado e prato de Pinterest imposs\u00edvel de replicar em cozinha real \u2014 fazendo o iniciante achar que n\u00e3o \u00e9 \"capaz\" e desistir. `[Use algo que sua audi\u00eancia j\u00e1 resmunga sobre \u2014 ajuste ao ressentimento real do seu p\u00fablico.]`\n\n**6. Por que agora?**\nAncore em algo concreto: turma com data de in\u00edcio definida, ou pre\u00e7o de lan\u00e7amento v\u00e1lido at\u00e9 uma data, ou vagas limitadas de acompanhamento/mentoria em grupo. `[AJUSTAR: qual \u00e9 o evento real \u2014 turma, prazo, vagas \u2014 n\u00e3o invente \"compre logo\" vazio.]`\n\n**7. Por que eu deveria confiar em voc\u00ea?**\nEscolha uma das tr\u00eas hist\u00f3rias (ou combine): **\"J\u00e1 Passei Por Isso\"** \u2014 voc\u00ea tentou virar vegana(o), a comida ficou sem gra\u00e7a, quase desistiu, at\u00e9 desenvolver o m\u00e9todo; ou **Especialista** \u2014 forma\u00e7\u00e3o em nutri\u00e7\u00e3o/gastronomia, anos de experi\u00eancia, alunas(os) formadas(os). `[AJUSTAR: qual \u00e9 a sua hist\u00f3ria real de credibilidade?]`\n\n**8. Como funciona?**\nExplique o Mapa de Trocas em passos l\u00f3gicos, ancorado em algo que o p\u00fablico j\u00e1 aceita como verdade (ex.: \"todo prato bom se resume a poucos elementos \u2014 prote\u00edna, gordura, acidez/umami, textura\" \u2014 ideia j\u00e1 popular em gastronomia). Trate isso como copy, embrulhado em ABT \u2014 n\u00e3o como manual t\u00e9cnico chato.\n\n**9. Como posso come\u00e7ar?**\nA oferta: m\u00f3dulos do curso + b\u00f4nus pensados para reduzir fric\u00e7\u00e3o (ex.: guia de despensa vegana econ\u00f4mica, card\u00e1pio de festas/fam\u00edlia, comunidade de apoio) + compara\u00e7\u00e3o de valor (quanto custaria resolver isso sozinho, por tentativa e erro, ou com nutricionista particular) + escada de valor somando tudo + pre\u00e7o final + garantia. `[AJUSTAR: seus m\u00f3dulos, b\u00f4nus, pre\u00e7o e garantia reais.]`\n\n**10. O que eu tenho a perder?**\nFechamento push-pull: devolva o controle (\"talvez n\u00e3o seja para todo mundo \u2014 s\u00f3 para quem est\u00e1 cansada(o) de tentar sozinha(o) e n\u00e3o quer mais depender de sorte\") e depois lembre do custo de n\u00e3o agir (continuar comprando substituto caro, cozinhando sem gra\u00e7a, se sentindo em d\u00edvida com a pr\u00f3pria promessa de mudar). Sem soar desesperado \u2014 apresente e deixe a pessoa decidir.\n\n---\n\n## Passo 3 \u2014 Como isso vira a carta\n\nCom as dez respostas no papel, a ordem de escrita j\u00e1 est\u00e1 pronta \u2014 n\u00e3o precisa inventar estrutura:\n\n- **Perguntas 1-4** \u2192 headline + abertura + primeira prova. Novidade (Mapa de Trocas) \u2192 grande promessa (comer o que ama, com a fam\u00edlia, sem culpa) \u2192 prova em ABT \u2192 o verdadeiro problema que tira a culpa de quem j\u00e1 tentou e n\u00e3o conseguiu.\n- **Perguntas 5-7** \u2192 fecham a venda emocional (cerca do primeiro ter\u00e7o da carta): o inimigo comum (cultura vegana inacess\u00edvel) \u2192 urg\u00eancia real (data da turma/prazo) \u2192 credibilidade (sua hist\u00f3ria).\n- **Perguntas 8-10** \u2192 justifica\u00e7\u00e3o l\u00f3gica + oferta + fechamento: como o m\u00e9todo funciona \u2192 oferta irresist\u00edvel (m\u00f3dulos, b\u00f4nus, garantia) \u2192 fechamento push-pull.\n\n---\n\n## O que eu preciso de voc\u00ea para transformar isso na carta final\n\nO esqueleto acima j\u00e1 resolve o bloqueio da p\u00e1gina em branco \u2014 mas para a vers\u00e3o final ficar sua de verdade (n\u00e3o um exemplo gen\u00e9rico), o ponto mais importante \u00e9 fechar a **Nova Oportunidade** e o **Novo Mecanismo**, porque s\u00e3o a base de tudo o resto. Responda o que puder:\n\n1. Existe algum m\u00e9todo/sistema/passo a passo espec\u00edfico que voc\u00ea usa e que n\u00e3o \u00e9 s\u00f3 \"aqui vai uma lista de receitas\"? Como voc\u00ea chamaria isso?\n2. Qual \u00e9 a dor mais forte da sua aluna/aluno ideal: medo de comida sem gra\u00e7a, medo de gastar mais, resist\u00eancia da fam\u00edlia, falta de tempo, ou outra coisa?\n3. Qual \u00e9 a sua hist\u00f3ria com a cozinha vegana \u2014 voc\u00ea j\u00e1 passou pela dificuldade que elas passam, ou sua autoridade vem de forma\u00e7\u00e3o/experi\u00eancia t\u00e9cnica?\n4. O curso j\u00e1 tem data de in\u00edcio, pre\u00e7o e b\u00f4nus definidos, ou isso ainda est\u00e1 em aberto?\n5. Voc\u00ea tem algum depoimento, resultado ou dado (mesmo informal) de quem j\u00e1 testou suas receitas/m\u00e9todo?\n\nAssim que tiver essas respostas \u2014 mesmo que incompletas \u2014, me manda que eu reescrevo o One Belief e as dez respostas com a informa\u00e7\u00e3o real, e a partir da\u00ed j\u00e1 d\u00e1 pra escrever a carta se\u00e7\u00e3o por se\u00e7\u00e3o, sem travar de novo.\n"}], "grading": null}, {"id": "eval-nao-sei-comecar-without_skill", "prompt": "vou lan\u00e7ar um curso de culin\u00e1ria vegana pra iniciantes e preciso escrever a carta de vendas mas n\u00e3o sei nem por onde come\u00e7ar, fico travado numa p\u00e1gina em branco", "eval_id": 2, "outputs": [{"name": "output.md", "type": "text", "content": "# Como sair da p\u00e1gina em branco e escrever a carta de vendas do seu curso de culin\u00e1ria vegana para iniciantes\n\nTravar na p\u00e1gina em branco \u00e9 normal \u2014 geralmente acontece porque a gente tenta escrever a carta \"bonita\" antes de saber o que ela precisa dizer. A solu\u00e7\u00e3o n\u00e3o \u00e9 for\u00e7ar criatividade, \u00e9 responder algumas perguntas simples primeiro e depois s\u00f3 preencher um esqueleto. Vamos fazer isso juntos.\n\n## Passo 1: Responda 5 perguntas antes de escrever qualquer frase\n\nN\u00e3o pense em \"copy\" ainda. S\u00f3 responda com sinceridade, em poucas palavras:\n\n1. **Quem \u00e9 a pessoa que voc\u00ea quer atingir?** (Ex: \"mulheres de 30-45 anos que querem parar de comer carne mas n\u00e3o sabem cozinhar sem receitas com carne/frango/queijo como base\")\n2. **Qual \u00e9 a dor ou frustra\u00e7\u00e3o dela hoje?** (Ex: \"acha que comida vegana \u00e9 sem gra\u00e7a, cara, ou d\u00e1 muito trabalho e vai fracassar de novo\")\n3. **O que ela j\u00e1 tentou que n\u00e3o funcionou?** (Ex: \"seguir perfis do Instagram, comprar livro de receita que juntou poeira, tentar 'do zero' e desistir em 1 semana\")\n4. **Qual \u00e9 a transforma\u00e7\u00e3o que seu curso entrega?** (N\u00e3o \u00e9 \"aprender receitas veganas\". \u00c9 algo como: \"cozinhar refei\u00e7\u00f5es veganas saborosas e simples no dia a dia, sem depender de ingrediente caro ou dif\u00edcil de achar\")\n5. **Por que voc\u00ea \u00e9 a pessoa certa pra ensinar isso?** (sua hist\u00f3ria, seus resultados, sua experi\u00eancia \u2014 mesmo que seja \"eu mesma fiz essa transi\u00e7\u00e3o e testei/errei at\u00e9 achar o caminho f\u00e1cil\")\n\nSe voc\u00ea conseguir responder essas 5 perguntas em uma frase cada, j\u00e1 tem 80% do conte\u00fado da carta. O resto \u00e9 organiza\u00e7\u00e3o.\n\n## Passo 2: Use este esqueleto (estrutura cl\u00e1ssica que funciona)\n\nCopie essa estrutura e v\u00e1 preenchendo bloco por bloco \u2014 n\u00e3o precisa ser na ordem, nem perfeito na primeira vez:\n\n### 1. Headline (t\u00edtulo)\nFala direto com a dor ou o desejo da pessoa. N\u00e3o precisa ser genial, precisa ser claro.\n\n> Exemplos para adaptar:\n> - \"Como cozinhar refei\u00e7\u00f5es veganas saborosas todos os dias, mesmo que voc\u00ea n\u00e3o saiba nem fritar um ovo\"\n> - \"O m\u00e9todo para iniciantes que tira voc\u00ea do arroz-com-feij\u00e3o-sem-gra\u00e7a e te leva a pratos veganos de verdade em 21 dias\"\n> - \"Pare de repetir as mesmas 3 receitas veganas sem sal (literalmente)\"\n\n### 2. Abertura \u2014 conecte com a dor\nDescreva o problema que a pessoa vive hoje, com detalhes que fa\u00e7am ela pensar \"\u00e9 exatamente isso que eu sinto\". Fale da frustra\u00e7\u00e3o de tentar ser vegana e sentir que a comida \u00e9 sem gra\u00e7a, cara, trabalhosa, ou que ela vai \"estragar tudo\" por falta de pr\u00e1tica.\n\n### 3. Agite o problema\nMostre o custo de continuar assim: desistir de novo, gastar dinheiro com ingredientes que sobram na geladeira, sentir culpa, achar que \"n\u00e3o \u00e9 pra ela\", voltar a comer carne por cansa\u00e7o.\n\n### 4. Apresente a solu\u00e7\u00e3o (seu curso)\nAqui voc\u00ea entra como a ponte entre a dor e a transforma\u00e7\u00e3o. N\u00e3o \u00e9 \"meu curso tem 20 aulas\". \u00c9 \"meu curso existe pra resolver exatamente isso: [dor espec\u00edfica]\".\n\n### 5. Mostre o que ela vai aprender/ganhar (benef\u00edcios, n\u00e3o s\u00f3 conte\u00fado)\nTransforme cada m\u00f3dulo/aula em um benef\u00edcio. Em vez de \"M\u00f3dulo 3: prote\u00ednas vegetais\", escreva \"M\u00f3dulo 3: como montar pratos com prote\u00edna de verdade, sem precisar virar bioqu\u00edmica de suplemento\".\n\n### 6. Prova social / autoridade\nDepoimentos, resultados, sua pr\u00f3pria hist\u00f3ria, n\u00famero de alunas, forma\u00e7\u00e3o, ou at\u00e9 \"eu mesma passei por isso\".\n\n### 7. A oferta\nO que exatamente ela recebe (aulas, b\u00f4nus, suporte, comunidade, prazo de acesso) e o pre\u00e7o.\n\n### 8. Quebra de obje\u00e7\u00f5es\nResponda o que ela est\u00e1 pensando: \"n\u00e3o tenho tempo\", \"sou p\u00e9ssima na cozinha\", \"\u00e9 caro\", \"j\u00e1 tentei antes e n\u00e3o deu certo\". Uma ou duas frases resolvendo cada uma.\n\n### 9. Garantia\nReduz o risco: \"experimente por 7 dias, se n\u00e3o gostar devolvemos\".\n\n### 10. Chamada para a\u00e7\u00e3o (CTA)\nDiga exatamente o que fazer agora: \"Clique no bot\u00e3o abaixo e garanta sua vaga\".\n\n### 11. P.S.\nReforce a urg\u00eancia ou o benef\u00edcio principal numa frase curta. \u00c9 uma das partes mais lidas da carta.\n\n## Passo 3: Rascunho de exemplo j\u00e1 preenchido (pra voc\u00ea adaptar, n\u00e3o copiar igual)\n\nAbaixo est\u00e1 um rascunho completo, propositalmente simples, pra te tirar do zero. Troque os colchetes `[ ]` pelas suas informa\u00e7\u00f5es reais.\n\n---\n\n**Voc\u00ea n\u00e3o precisa nascer sabendo cozinhar pra comer vegano \u2014 e ser saboroso.**\n\nSe voc\u00ea j\u00e1 tentou virar vegana (ou reduzir a carne) e sentiu que sua comida ficou sem gra\u00e7a, sem gra\u00e7a de novo, e sem gra\u00e7a pela terceira vez... o problema n\u00e3o \u00e9 voc\u00ea. \u00c9 que ningu\u00e9m te ensinou o caminho certo pra iniciantes.\n\nA maioria dos conte\u00fados de culin\u00e1ria vegana por a\u00ed foi feita por quem j\u00e1 cozinha h\u00e1 anos \u2014 receitas com 15 ingredientes ex\u00f3ticos, panelas especiais, tempero que voc\u00ea nunca ouviu falar. Resultado: voc\u00ea tenta uma vez, d\u00e1 errado, e volta pro arroz com feij\u00e3o sem gra\u00e7a (ou pior, desiste e volta a comer o que comia antes).\n\nEu criei o **[nome do curso]** justamente para quem est\u00e1 come\u00e7ando do zero \u2014 sem experi\u00eancia na cozinha, sem tempo sobrando, e sem vontade de virar chef.\n\nEm [X] semanas, voc\u00ea vai aprender:\n\n- Como montar refei\u00e7\u00f5es veganas completas (com prote\u00edna de verdade) usando ingredientes que voc\u00ea j\u00e1 encontra no mercado do seu bairro\n- As 5 t\u00e9cnicas b\u00e1sicas que substituem 90% das receitas complicadas por a\u00ed\n- Como temperar comida vegana pra ela ter sabor de verdade \u2014 nada de \"sem gra\u00e7a\"\n- Um card\u00e1pio pronto pra semana, pra voc\u00ea nunca mais ficar sem ideia do que cozinhar\n- Como economizar tempo cozinhando em lote, sem virar escrava do fog\u00e3o\n\n[Seu nome] passou pelo mesmo caminho: [conte rapidamente sua hist\u00f3ria \u2014 quanto tempo levou, o que tentou, o que n\u00e3o funcionou at\u00e9 achar o m\u00e9todo].\n\n> \"[Depoimento de uma aluna/teste beta, se voc\u00ea tiver]\"\n\n**O que est\u00e1 inclu\u00eddo:**\n- [X] videoaulas passo a passo\n- [X] receitas testadas para iniciantes\n- Card\u00e1pio semanal pronto\n- Grupo de suporte / comunidade\n- Acesso por [tempo]\n\nPor apenas [pre\u00e7o], em vez de [pre\u00e7o \"normal\", se aplic\u00e1vel].\n\n**\"Mas eu n\u00e3o tenho tempo/n\u00e3o sei cozinhar nada/j\u00e1 tentei antes...\"**\nPensando assim, o curso \u00e9 exatamente pra voc\u00ea. As aulas s\u00e3o curtas, direto ao ponto, e feitas para quem nunca cozinhou vegano na vida.\n\n**Garantia:** experimente por [X] dias. Se n\u00e3o sentir que sua rela\u00e7\u00e3o com a cozinha vegana mudou, devolvemos seu dinheiro.\n\n\ud83d\udc49 **[Quero come\u00e7ar agora / Garantir minha vaga]**\n\nP.S. Voc\u00ea pode continuar tentando sozinha e repetindo o ciclo de tentar-e-desistir, ou pode ter um caminho testado, passo a passo, feito pra quem nunca cozinhou vegano antes. A escolha \u00e9 sua \u2014 mas as vagas [s\u00e3o limitadas / fecham em X dias].\n\n---\n\n## Passo 4: Como destravar quando bater o branco de novo\n\n- **N\u00e3o escreva na ordem.** Comece pelo bloco que for mais f\u00e1cil pra voc\u00ea hoje (geralmente \u00e9 \"o que ela vai aprender\" ou \"sua hist\u00f3ria\"). O t\u00edtulo quase sempre fica mais f\u00e1cil de escrever por \u00faltimo.\n- **Escreva falado.** Grave um \u00e1udio se explicando o curso pra uma amiga como se ela tivesse acabado de perguntar \"me conta sobre esse curso\". Depois transcreva e organize.\n- **Primeiro rascunho feio de prop\u00f3sito.** Escreva errado, repetitivo, cru. Revis\u00e3o vem depois. A trava geralmente \u00e9 querer escrever bonito e certo na primeira tentativa.\n- **Foque em UMA pessoa real.** Imagine uma pessoa espec\u00edfica (uma amiga, uma seguidora) e escreva pra ela, n\u00e3o para \"o p\u00fablico em geral\".\n- **Corte, n\u00e3o invente.** Depois que o rascunho feio existir, \u00e9 muito mais f\u00e1cil cortar e ajustar do que criar do zero.\n\n## Pr\u00f3ximo passo\n\nSe quiser, me manda as respostas das 5 perguntas do Passo 1 (p\u00fablico, dor, o que j\u00e1 tentaram, transforma\u00e7\u00e3o, sua credibilidade) que eu j\u00e1 te devolvo um rascunho completo e personalizado da sua carta, pronto pra voc\u00ea s\u00f3 ajustar o tom.\n"}], "grading": null}, {"id": "eval-diagnostico-with_skill", "prompt": "escrevi essa abertura de carta de vendas e n\u00e3o est\u00e1 convertendo nada, s\u00f3 0.5% de convers\u00e3o. d\u00e1 uma olhada: \"Nosso curso de investimentos ensina tudo que voc\u00ea precisa saber sobre a bolsa de valores. Se voc\u00ea n\u00e3o est\u00e1 investindo bem, provavelmente \u00e9 porque n\u00e3o entende o suficiente sobre o mercado. Matricule-se agora e aprenda com especialistas.\"", "eval_id": 3, "outputs": [{"name": "output.md", "type": "text", "content": "# Diagn\u00f3stico da abertura (framework \"One Belief + Ten Questions\")\n\nRodei sua abertura pelo checklist de diagn\u00f3stico do m\u00e9todo de Evaldo Albuquerque (One Belief + Dez Perguntas). O texto:\n\n> \"Nosso curso de investimentos ensina tudo que voc\u00ea precisa saber sobre a bolsa de valores. Se voc\u00ea n\u00e3o est\u00e1 investindo bem, provavelmente \u00e9 porque n\u00e3o entende o suficiente sobre o mercado. Matricule-se agora e aprenda com especialistas.\"\n\n0,5% de convers\u00e3o com esse texto n\u00e3o \u00e9 coincid\u00eancia \u2014 d\u00e1 pra apontar exatamente onde a pe\u00e7a quebra. Tem dois problemas graves e um terceiro que agrava os dois.\n\n## O problema raiz: n\u00e3o existe One Belief\n\nAntes das dez perguntas, o m\u00e9todo pede um **One Belief** com uma Nova Oportunidade genu\u00edna (o que \u00e9 \u00fanico na oferta). O livro cita, literalmente como exemplo do que **n\u00e3o** funciona, a frase \"investir na bolsa\" \u2014 \"n\u00e3o tem nada de \u00fanico\". Sua abertura \u00e9 essa mesma frase reescrita: \"ensina tudo que voc\u00ea precisa saber sobre a bolsa de valores\". Isso n\u00e3o \u00e9 uma novidade, \u00e9 a categoria inteira do mercado descrita em uma frase. N\u00e3o existe nenhum mecanismo, m\u00e9todo ou \u00e2ngulo propriet\u00e1rio ali \u2014 \u00e9 o mesmo texto que qualquer um dos milhares de cursos de investimento concorrentes poderia usar.\n\nSem Nova Oportunidade real, a Pergunta 1 (abaixo) n\u00e3o tem como ser respondida, e sem ela nada do resto do funil converte \u2014 o c\u00e9rebro do leitor s\u00f3 libera dopamina (o gatilho que mant\u00e9m a leitura) diante de algo genuinamente novo. Diante do familiar, ele desliga.\n\n## Checklist pergunta por pergunta\n\n- [ ] **Pergunta 1 \u2014 \"Como isso \u00e9 diferente de tudo que eu j\u00e1 vi?\"** FALHA. \"Ensina tudo que voc\u00ea precisa saber sobre a bolsa\" \u00e9 o oposto de uma revela\u00e7\u00e3o/descoberta. N\u00e3o h\u00e1 nenhuma Nova Oportunidade (novo mecanismo, novo m\u00e9todo, nova lei, nova amea\u00e7a) apresentada. \u00c9 a mesma promessa gen\u00e9rica de qualquer curso do nicho.\n- [ ] **Pergunta 2 \u2014 \"O que tenho a ganhar com isso?\"** FRACA. \"Tudo que voc\u00ea precisa saber\" n\u00e3o \u00e9 uma promessa espec\u00edfica e v\u00edvida ligada a um desejo real (ex.: renda extra mensal, se aposentar X anos mais cedo, parar de perder dinheiro em a\u00e7\u00f5es erradas). \u00c9 gen\u00e9rica o suficiente para n\u00e3o fazer \"\u00e1gua na boca\" em ningu\u00e9m.\n- [ ] **Pergunta 3 \u2014 \"Como sei que isso \u00e9 verdade?\"** AUSENTE. N\u00e3o h\u00e1 nenhuma prova \u2014 nem um dado nu, nem (pior ainda) uma prova embrulhada em ABT. O leitor c\u00e9tico n\u00e3o recebe nenhum motivo para acreditar.\n- [ ] **Pergunta 4 \u2014 \"Por que n\u00e3o estou tendo sucesso?\"** \u00c9 AQUI QUE A CARTA MORRE. \"Se voc\u00ea n\u00e3o est\u00e1 investindo bem, provavelmente \u00e9 porque n\u00e3o entende o suficiente sobre o mercado\" **joga a culpa diretamente no leitor**. Isso \u00e9 quase palavra por palavra o exemplo que o pr\u00f3prio m\u00e9todo cita como erro fatal \u2014 o equivalente a dizer \"se voc\u00ea n\u00e3o economizou o suficiente, \u00e9 porque n\u00e3o sabe lidar com dinheiro\". Ningu\u00e9m quer ler isso. A pergunta 4 existe justamente para **tirar** a culpa do leitor (ele j\u00e1 tentou e falhou, e a pe\u00e7a precisa mostrar que a causa foi um fator externo, n\u00e3o a compet\u00eancia dele) \u2014 aqui est\u00e1 fazendo o oposto: confirmando a inseguran\u00e7a que ele j\u00e1 sente e dando um motivo pra fechar a aba.\n- Fechamento (\"Matricule-se agora e aprenda com especialistas\") n\u00e3o \u00e9 avaliado ainda nesse trecho (\u00e9 conte\u00fado das Perguntas 6/7/9/10, mais adiante na carta), mas j\u00e1 vale registrar: \u00e9 um CTA gen\u00e9rico sem urg\u00eancia ancorada em evento real e sem nenhuma credibilidade estabelecida antes dele \u2014 est\u00e1 pedindo a venda sem ter feito nenhum trabalho de persuas\u00e3o pr\u00e9vio.\n\n## Por que isso resulta em 0,5%\n\nResumindo o efeito combinado:\n1. Sem novidade \u2192 sem dopamina \u2192 o leitor nem entra no \"modo explora\u00e7\u00e3o\", desliga j\u00e1 na primeira frase.\n2. Promessa vaga \u2192 mesmo quem continuasse lendo n\u00e3o tem um motivo concreto para se importar.\n3. Culpa no leitor na frase 2 \u2192 quem sobrou at\u00e9 aqui agora se sente exposto/inadequado \u2014 rea\u00e7\u00e3o natural \u00e9 fechar a p\u00e1gina, n\u00e3o confiar em quem acabou de dizer \"o problema \u00e9 voc\u00ea\".\n4. CTA sem provas nem urg\u00eancia \u2192 mesmo o pouqu\u00edssimo leitor que resistiu a tudo isso n\u00e3o tem raz\u00e3o nenhuma pra agir \"agora\".\n\n## Como corrigir (na ordem do m\u00e9todo)\n\n**1. Defina o One Belief antes de reescrever qualquer frase.** Preencha o molde:\n> \"[Nova Oportunidade] \u00e9 a chave para [Desejo] e s\u00f3 \u00e9 poss\u00edvel atrav\u00e9s de [Novo Mecanismo].\"\n\nPreciso saber o que \u00e9 realmente \u00fanico no seu curso para preencher isso com precis\u00e3o \u2014 mas como exemplo do padr\u00e3o que voc\u00ea deve buscar (adapte ao seu produto real):\n> \"Um sistema de 3 sinais que identifica quando uma a\u00e7\u00e3o institucional est\u00e1 prestes a subir *antes* do mercado perceber \u00e9 a chave para gerar uma segunda renda mensal na bolsa \u2014 e s\u00f3 \u00e9 poss\u00edvel atrav\u00e9s do [nome do seu m\u00e9todo/indicador propriet\u00e1rio].\"\n\nSe voc\u00ea n\u00e3o tem um mecanismo propriet\u00e1rio (um m\u00e9todo, indicador, framework, dado exclusivo) \u2014 esse \u00e9 o problema de fundo antes mesmo do texto: sem isso, qualquer copy vai continuar soando gen\u00e9rica, porque a oferta em si ainda n\u00e3o tem uma Nova Oportunidade real.\n\n**2. Reescreva a Pergunta 1 + 2 no headline/abertura**, com a novidade expl\u00edcita e uma promessa espec\u00edfica e v\u00edvida (n\u00e3o \"tudo que voc\u00ea precisa saber\" \u2014 algo como um resultado num\u00e9rico, um prazo, uma transforma\u00e7\u00e3o concreta).\n\n**3. Adicione prova em ABT (Pergunta 3)** antes de fazer qualquer afirma\u00e7\u00e3o de credibilidade nua \u2014 conte a hist\u00f3ria por tr\u00e1s de um resultado (E \u2192 Mas \u2192 Portanto), n\u00e3o apenas cite n\u00fameros soltos.\n\n**4. Reescreva a Pergunta 4 para tirar a culpa do leitor**, usando a f\u00f3rmula de engenharia reversa do m\u00e9todo:\n- Releia o que \u00e9 \u00fanico no seu mecanismo (Pergunta 1).\n- Inverta: a *aus\u00eancia* dessa caracter\u00edstica \u00e9 o \"verdadeiro problema\" que explica o fracasso do leitor at\u00e9 agora \u2014 n\u00e3o a falta de conhecimento ou compet\u00eancia dele.\n- Padr\u00e3o de frase: \"Se voc\u00ea j\u00e1 tentou investir e n\u00e3o teve os resultados que queria... a culpa N\u00c3O \u00e9 sua. Isso acontece porque [verdadeiro problema \u2014 ex.: 99% do conte\u00fado de investimento ensina a reagir a not\u00edcia que o mercado j\u00e1 precificou]. [Seu curso/m\u00e9todo] \u00e9 diferente porque [como ataca esse problema].\"\n\n**Exemplo de reescrita ilustrativa** (troque os colchetes pelas especificidades reais do seu curso/mecanismo):\n\n> \"Existe uma forma de identificar um movimento antes que ele apare\u00e7a em qualquer manchete \u2014 e n\u00e3o tem nada a ver com 'estudar mais' o mercado. [Nome do mecanismo] mostrou a [X] alunos como transformar [Y horas por semana] em uma segunda fonte de renda consistente na bolsa, mesmo come\u00e7ando do zero. Se voc\u00ea j\u00e1 tentou investir sozinho e n\u00e3o viu resultado, a culpa n\u00e3o \u00e9 sua: a maioria do conte\u00fado por a\u00ed ensina a reagir \u00e0 not\u00edcia \u2014 quando ela j\u00e1 foi precificada pelo mercado. [Nome do mecanismo] resolve exatamente esse atraso.\"\n\nIsso ainda precisa da Prova (Pergunta 3, em ABT) entre a promessa e a virada da culpa, e do restante das dez perguntas (inimigo comum, urg\u00eancia real, credibilidade, mecanismo l\u00f3gico, oferta e fechamento push-pull) para virar a carta completa \u2014 mas j\u00e1 corrige os dois erros que est\u00e3o matando sua convers\u00e3o hoje: a aus\u00eancia de Nova Oportunidade e a culpa jogada no leitor.\n\n## Pr\u00f3ximo passo\n\nPara reescrever a abertura de verdade (n\u00e3o s\u00f3 ilustrativamente), preciso de tr\u00eas respostas suas:\n1. O que \u00e9 genuinamente \u00fanico no seu curso \u2014 um m\u00e9todo, indicador, framework ou dado que s\u00f3 voc\u00ea ensina (a Nova Oportunidade)?\n2. Qual \u00e9 o desejo espec\u00edfico do seu p\u00fablico (renda extra, aposentadoria antecipada, parar de perder dinheiro, liberdade financeira)?\n3. Que prova concreta voc\u00ea tem (resultados de alunos, background dos especialistas, dados de mercado) para sustentar a promessa?\n\nCom isso d\u00e1 pra montar o One Belief real e reescrever a abertura (e a carta inteira) seguindo a sequ\u00eancia das dez perguntas.\n"}], "grading": null}, {"id": "eval-diagnostico-without_skill", "prompt": "escrevi essa abertura de carta de vendas e n\u00e3o est\u00e1 convertendo nada, s\u00f3 0.5% de convers\u00e3o. d\u00e1 uma olhada: \"Nosso curso de investimentos ensina tudo que voc\u00ea precisa saber sobre a bolsa de valores. Se voc\u00ea n\u00e3o est\u00e1 investindo bem, provavelmente \u00e9 porque n\u00e3o entende o suficiente sobre o mercado. Matricule-se agora e aprenda com especialistas.\"", "eval_id": 3, "outputs": [{"name": "output.md", "type": "text", "content": "# Diagn\u00f3stico da abertura da carta de vendas\n\n## O texto original\n\n> \"Nosso curso de investimentos ensina tudo que voc\u00ea precisa saber sobre a bolsa de valores. Se voc\u00ea n\u00e3o est\u00e1 investindo bem, provavelmente \u00e9 porque n\u00e3o entende o suficiente sobre o mercado. Matricule-se agora e aprenda com especialistas.\"\n\nCom 0,5% de convers\u00e3o, o problema n\u00e3o \u00e9 sorte nem tr\u00e1fego \u2014 \u00e9 a estrutura da mensagem. Essa abertura comete quase todos os erros cl\u00e1ssicos de uma \"p\u00e1gina de vendas escrita de dentro para fora\" (fala do produto, n\u00e3o do leitor). Vou detalhar cada um.\n\n---\n\n## Os 6 problemas principais\n\n### 1. Come\u00e7a falando de \"n\u00f3s\", n\u00e3o do leitor\n\"**Nosso** curso... ensina...\" \u2014 a primeira palavra da carta \u00e9 sobre voc\u00ea, empresa. O leitor, nos primeiros 3 segundos, precisa sentir \"isso \u00e9 sobre mim e meu problema\". Quando a frase de abertura \u00e9 sobre o produto, o c\u00e9rebro do leitor n\u00e3o tem motivo pra continuar lendo. Toda copy de alta convers\u00e3o abre com o mundo do leitor (a dor, o desejo, uma pergunta, um fato chocante) \u2014 nunca com o an\u00fancio institucional do produto.\n\n### 2. Promessa gen\u00e9rica demais para gerar cren\u00e7a ou curiosidade\n\"Ensina tudo que voc\u00ea precisa saber sobre a bolsa de valores\" \u00e9 uma afirma\u00e7\u00e3o t\u00e3o ampla que n\u00e3o \u00e9 acredit\u00e1vel nem espec\u00edfica. N\u00e3o diz *o qu\u00ea* exatamente, n\u00e3o diz *como*, n\u00e3o diz *em quanto tempo*, n\u00e3o d\u00e1 nenhuma prova. Promessas vagas soam como propaganda gen\u00e9rica \u2014 o c\u00e9rebro do leitor j\u00e1 viu isso mil vezes e ignora.\n\n### 3. Acusa e culpa o leitor logo de cara\n\"Se voc\u00ea **n\u00e3o est\u00e1 investindo bem, provavelmente \u00e9 porque n\u00e3o entende** o suficiente sobre o mercado\" \u2014 isso \u00e9 dizer ao leitor \"voc\u00ea \u00e9 ignorante/incompetente\" na segunda frase da carta. Isso ativa defensividade, n\u00e3o interesse. Ningu\u00e9m quer se sentir burro para continuar lendo um texto de vendas. Copy eficaz cria empatia com a dor do leitor (\"eu sei como \u00e9 frustrante...\") em vez de apontar o dedo.\n\nAl\u00e9m disso, essa frase \u00e9 logicamente fr\u00e1gil: existem dezenas de raz\u00f5es para algu\u00e9m n\u00e3o investir bem (falta de tempo, medo, falta de capital, m\u00e1s experi\u00eancias passadas, falta de estrat\u00e9gia \u2014 n\u00e3o s\u00f3 \"falta de conhecimento\"). Isso faz o leitor desconfiar da l\u00f3gica do argumento inteiro.\n\n### 4. Nenhuma prova, nenhuma especificidade, nenhum diferencial\nN\u00e3o h\u00e1 n\u00fameros, resultados, nomes, casos, garantias ou qualquer elemento que separe esse curso dos outros 500 cursos de investimento que existem no mercado. \"Aprenda com especialistas\" \u00e9 a frase mais usada (e mais ignorada) do nicho \u2014 n\u00e3o diz quem s\u00e3o, o que j\u00e1 fizeram, por que merecem confian\u00e7a.\n\n### 5. N\u00e3o h\u00e1 gancho, tens\u00e3o ou motivo para continuar lendo\nUma abertura de carta de vendas precisa fazer o leitor pensar \"espera, isso \u00e9 sobre mim\" ou \"preciso saber o resto disso\". Aqui, em tr\u00eas frases, j\u00e1 se entrega a oferta inteira e a CTA \u2014 n\u00e3o sobra curiosidade nenhuma para o leitor continuar.\n\n### 6. CTA prematura e sem urg\u00eancia real\n\"Matricule-se agora\" na abertura, sem ter constru\u00eddo desejo, confian\u00e7a ou prova nenhuma, \u00e9 pedir o compromisso m\u00e1ximo (pagar) antes de ter dado qualquer motivo real para isso. \u00c9 como pedir em casamento no \"oi, tudo bem?\".\n\n---\n\n## Reescrita sugerida (mesma ideia, estrutura correta)\n\n> \"Voc\u00ea abre o home broker, v\u00ea o Ibovespa balan\u00e7ando e trava. Compra? Vende? Espera?\n>\n> N\u00e3o \u00e9 falta de intelig\u00eancia \u2014 \u00e9 falta de um m\u00e9todo. A maioria dos investidores perde dinheiro n\u00e3o porque n\u00e3o se esfor\u00e7a, mas porque nunca aprendeu a ler o mercado como quem faz isso profissionalmente h\u00e1 anos.\n>\n> No [Nome do Curso], mais de [X] alunos aprenderam a montar suas pr\u00f3prias estrat\u00e9gias de investimento em [prazo], guiados por especialistas que vivem do pr\u00f3prio dinheiro investido na bolsa \u2014 n\u00e3o s\u00f3 de dar aula sobre ela.\n>\n> Quer ver como funciona antes de decidir? [veja a aula gratuita / conhe\u00e7a o m\u00e9todo]\"\n\n### Por que essa estrutura funciona melhor\n- **Abre com a cena do leitor**, n\u00e3o com o produto \u2014 ele se reconhece na primeira linha.\n- **Reformula o \"problema\" sem culpar** \u2014 tira o peso de \"voc\u00ea \u00e9 burro\" e coloca em \"falta de m\u00e9todo\", o que \u00e9 resolv\u00edvel e n\u00e3o ofensivo.\n- **Introduz prova social e especificidade** (n\u00famero de alunos, prazo, quem s\u00e3o os especialistas) em vez de alega\u00e7\u00f5es vazias.\n- **Adia o CTA de compra direta** para um convite de baixo risco (assistir, conhecer) \u2014 isso \u00e9 coerente com o est\u00e1gio de consci\u00eancia de quem est\u00e1 lendo a primeira frase de uma carta, e normalmente converte muito mais do que pedir a matr\u00edcula de cara.\n\n---\n\n## Pr\u00f3ximo passo recomendado\nAntes de reescrever a carta inteira, vale testar s\u00f3 essa abertura em A/B contra a atual \u2014 mudar somente as 3 primeiras frases j\u00e1 costuma mover a convers\u00e3o de forma mensur\u00e1vel, porque \u00e9 o que decide se o leitor continua lendo ou fecha a aba.\n"}], "grading": null}], "previous_feedback": {}, "previous_outputs": {}};
+
+    // ---- State ----
+    let feedbackMap = {};  // run_id -> feedback text
+    let currentIndex = 0;
+    let visitedRuns = new Set();
+
+    // ---- Init ----
+    async function init() {
+      // Load saved feedback from server — but only if this isn't a fresh
+      // iteration (indicated by previous_feedback being present). When
+      // previous feedback exists, the feedback.json on disk is stale from
+      // the prior iteration and should not pre-fill the textareas.
+      const hasPrevious = Object.keys(EMBEDDED_DATA.previous_feedback || {}).length > 0
+        || Object.keys(EMBEDDED_DATA.previous_outputs || {}).length > 0;
+      if (!hasPrevious) {
+        try {
+          const resp = await fetch("/api/feedback");
+          const data = await resp.json();
+          if (data.reviews) {
+            for (const r of data.reviews) feedbackMap[r.run_id] = r.feedback;
+          }
+        } catch { /* first run, no feedback yet */ }
+      }
+
+      document.getElementById("skill-name").textContent = EMBEDDED_DATA.skill_name;
+      showRun(0);
+
+      // Wire up feedback auto-save
+      const textarea = document.getElementById("feedback");
+      let saveTimeout = null;
+      textarea.addEventListener("input", () => {
+        clearTimeout(saveTimeout);
+        document.getElementById("feedback-status").textContent = "";
+        saveTimeout = setTimeout(() => saveCurrentFeedback(), 800);
+      });
+    }
+
+    // ---- Navigation ----
+    function navigate(delta) {
+      const newIndex = currentIndex + delta;
+      if (newIndex >= 0 && newIndex < EMBEDDED_DATA.runs.length) {
+        saveCurrentFeedback();
+        showRun(newIndex);
+      }
+    }
+
+    function updateNavButtons() {
+      document.getElementById("prev-btn").disabled = currentIndex === 0;
+      document.getElementById("next-btn").disabled =
+        currentIndex === EMBEDDED_DATA.runs.length - 1;
+    }
+
+    // ---- Show a run ----
+    function showRun(index) {
+      currentIndex = index;
+      const run = EMBEDDED_DATA.runs[index];
+
+      // Progress
+      document.getElementById("progress").textContent =
+        `${index + 1} of ${EMBEDDED_DATA.runs.length}`;
+
+      // Prompt
+      document.getElementById("prompt-text").textContent = run.prompt;
+
+      // Config badge
+      const badge = document.getElementById("config-badge");
+      const configMatch = run.id.match(/(with_skill|without_skill|new_skill|old_skill)/);
+      if (configMatch) {
+        const config = configMatch[1];
+        const isBaseline = config === "without_skill" || config === "old_skill";
+        badge.textContent = config.replace(/_/g, " ");
+        badge.className = "config-badge " + (isBaseline ? "config-baseline" : "config-primary");
+        badge.style.display = "inline-block";
+      } else {
+        badge.style.display = "none";
+      }
+
+      // Outputs
+      renderOutputs(run);
+
+      // Previous outputs
+      renderPrevOutputs(run);
+
+      // Grades
+      renderGrades(run);
+
+      // Previous feedback
+      const prevFb = (EMBEDDED_DATA.previous_feedback || {})[run.id];
+      const prevEl = document.getElementById("prev-feedback");
+      if (prevFb) {
+        document.getElementById("prev-feedback-text").textContent = prevFb;
+        prevEl.style.display = "block";
+      } else {
+        prevEl.style.display = "none";
+      }
+
+      // Feedback
+      document.getElementById("feedback").value = feedbackMap[run.id] || "";
+      document.getElementById("feedback-status").textContent = "";
+
+      updateNavButtons();
+
+      // Track visited runs and promote done button when all visited
+      visitedRuns.add(index);
+      const doneBtn = document.getElementById("done-btn");
+      if (visitedRuns.size >= EMBEDDED_DATA.runs.length) {
+        doneBtn.classList.add("ready");
+      }
+
+      // Scroll main content to top
+      document.querySelector(".main").scrollTop = 0;
+    }
+
+    // ---- Render outputs ----
+    function renderOutputs(run) {
+      const container = document.getElementById("outputs-body");
+      container.innerHTML = "";
+
+      const outputs = run.outputs || [];
+      if (outputs.length === 0) {
+        container.innerHTML = '<div class="empty-state">No output files</div>';
+        return;
+      }
+
+      for (const file of outputs) {
+        const fileDiv = document.createElement("div");
+        fileDiv.className = "output-file";
+
+        // Always show file header with download link
+        const header = document.createElement("div");
+        header.className = "output-file-header";
+        const nameSpan = document.createElement("span");
+        nameSpan.textContent = file.name;
+        header.appendChild(nameSpan);
+        const dlBtn = document.createElement("a");
+        dlBtn.className = "dl-btn";
+        dlBtn.textContent = "Download";
+        dlBtn.download = file.name;
+        dlBtn.href = getDownloadUri(file);
+        header.appendChild(dlBtn);
+        fileDiv.appendChild(header);
+
+        const content = document.createElement("div");
+        content.className = "output-file-content";
+
+        if (file.type === "text") {
+          const pre = document.createElement("pre");
+          pre.textContent = file.content;
+          content.appendChild(pre);
+        } else if (file.type === "image") {
+          const img = document.createElement("img");
+          img.src = file.data_uri;
+          img.alt = file.name;
+          content.appendChild(img);
+        } else if (file.type === "pdf") {
+          const iframe = document.createElement("iframe");
+          iframe.src = file.data_uri;
+          content.appendChild(iframe);
+        } else if (file.type === "xlsx") {
+          renderXlsx(content, file.data_b64);
+        } else if (file.type === "binary") {
+          const a = document.createElement("a");
+          a.className = "download-link";
+          a.href = file.data_uri;
+          a.download = file.name;
+          a.textContent = "Download " + file.name;
+          content.appendChild(a);
+        } else if (file.type === "error") {
+          const pre = document.createElement("pre");
+          pre.textContent = file.content;
+          pre.style.color = "var(--red)";
+          content.appendChild(pre);
+        }
+
+        fileDiv.appendChild(content);
+        container.appendChild(fileDiv);
+      }
+    }
+
+    // ---- XLSX rendering via SheetJS ----
+    function renderXlsx(container, b64Data) {
+      try {
+        const raw = Uint8Array.from(atob(b64Data), c => c.charCodeAt(0));
+        const wb = XLSX.read(raw, { type: "array" });
+
+        for (let i = 0; i < wb.SheetNames.length; i++) {
+          const sheetName = wb.SheetNames[i];
+          const ws = wb.Sheets[sheetName];
+
+          if (wb.SheetNames.length > 1) {
+            const sheetLabel = document.createElement("div");
+            sheetLabel.style.cssText =
+              "font-weight:600; font-size:0.8rem; color:#b0aea5; margin-top:0.5rem; margin-bottom:0.25rem;";
+            sheetLabel.textContent = "Sheet: " + sheetName;
+            container.appendChild(sheetLabel);
+          }
+
+          const htmlStr = XLSX.utils.sheet_to_html(ws, { editable: false });
+          const wrapper = document.createElement("div");
+          wrapper.innerHTML = htmlStr;
+          container.appendChild(wrapper);
+        }
+      } catch (err) {
+        container.textContent = "Error rendering spreadsheet: " + err.message;
+      }
+    }
+
+    // ---- Grades ----
+    function renderGrades(run) {
+      const section = document.getElementById("grades-section");
+      const content = document.getElementById("grades-content");
+
+      if (!run.grading) {
+        section.style.display = "none";
+        return;
+      }
+
+      const grading = run.grading;
+      section.style.display = "block";
+      // Reset to collapsed
+      content.classList.remove("open");
+      document.getElementById("grades-arrow").classList.remove("open");
+
+      const summary = grading.summary || {};
+      const expectations = grading.expectations || [];
+
+      let html = '<div style="padding: 1rem;">';
+
+      // Summary line
+      const passRate = summary.pass_rate != null
+        ? Math.round(summary.pass_rate * 100) + "%"
+        : "?";
+      const badgeClass = summary.pass_rate >= 0.8 ? "grade-pass" : summary.pass_rate >= 0.5 ? "" : "grade-fail";
+      html += '<div class="grades-summary">';
+      html += '<span class="grade-badge ' + badgeClass + '">' + passRate + '</span>';
+      html += '<span>' + (summary.passed || 0) + ' passed, ' + (summary.failed || 0) + ' failed of ' + (summary.total || 0) + '</span>';
+      html += '</div>';
+
+      // Assertions list
+      html += '<ul class="assertion-list">';
+      for (const exp of expectations) {
+        const statusClass = exp.passed ? "pass" : "fail";
+        const statusIcon = exp.passed ? "\u2713" : "\u2717";
+        html += '<li class="assertion-item">';
+        html += '<span class="assertion-status ' + statusClass + '">' + statusIcon + '</span>';
+        html += '<span>' + escapeHtml(exp.text) + '</span>';
+        if (exp.evidence) {
+          html += '<div class="assertion-evidence">' + escapeHtml(exp.evidence) + '</div>';
+        }
+        html += '</li>';
+      }
+      html += '</ul>';
+
+      html += '</div>';
+      content.innerHTML = html;
+    }
+
+    function toggleGrades() {
+      const content = document.getElementById("grades-content");
+      const arrow = document.getElementById("grades-arrow");
+      content.classList.toggle("open");
+      arrow.classList.toggle("open");
+    }
+
+    // ---- Previous outputs (collapsible) ----
+    function renderPrevOutputs(run) {
+      const section = document.getElementById("prev-outputs-section");
+      const content = document.getElementById("prev-outputs-content");
+      const prevOutputs = (EMBEDDED_DATA.previous_outputs || {})[run.id];
+
+      if (!prevOutputs || prevOutputs.length === 0) {
+        section.style.display = "none";
+        return;
+      }
+
+      section.style.display = "block";
+      // Reset to collapsed
+      content.classList.remove("open");
+      document.getElementById("prev-outputs-arrow").classList.remove("open");
+
+      // Render the files into the content area
+      content.innerHTML = "";
+      const wrapper = document.createElement("div");
+      wrapper.style.padding = "1rem";
+
+      for (const file of prevOutputs) {
+        const fileDiv = document.createElement("div");
+        fileDiv.className = "output-file";
+
+        const header = document.createElement("div");
+        header.className = "output-file-header";
+        const nameSpan = document.createElement("span");
+        nameSpan.textContent = file.name;
+        header.appendChild(nameSpan);
+        const dlBtn = document.createElement("a");
+        dlBtn.className = "dl-btn";
+        dlBtn.textContent = "Download";
+        dlBtn.download = file.name;
+        dlBtn.href = getDownloadUri(file);
+        header.appendChild(dlBtn);
+        fileDiv.appendChild(header);
+
+        const fc = document.createElement("div");
+        fc.className = "output-file-content";
+
+        if (file.type === "text") {
+          const pre = document.createElement("pre");
+          pre.textContent = file.content;
+          fc.appendChild(pre);
+        } else if (file.type === "image") {
+          const img = document.createElement("img");
+          img.src = file.data_uri;
+          img.alt = file.name;
+          fc.appendChild(img);
+        } else if (file.type === "pdf") {
+          const iframe = document.createElement("iframe");
+          iframe.src = file.data_uri;
+          fc.appendChild(iframe);
+        } else if (file.type === "xlsx") {
+          renderXlsx(fc, file.data_b64);
+        } else if (file.type === "binary") {
+          const a = document.createElement("a");
+          a.className = "download-link";
+          a.href = file.data_uri;
+          a.download = file.name;
+          a.textContent = "Download " + file.name;
+          fc.appendChild(a);
+        }
+
+        fileDiv.appendChild(fc);
+        wrapper.appendChild(fileDiv);
+      }
+
+      content.appendChild(wrapper);
+    }
+
+    function togglePrevOutputs() {
+      const content = document.getElementById("prev-outputs-content");
+      const arrow = document.getElementById("prev-outputs-arrow");
+      content.classList.toggle("open");
+      arrow.classList.toggle("open");
+    }
+
+    // ---- Feedback (saved to server -> feedback.json) ----
+    function saveCurrentFeedback() {
+      const run = EMBEDDED_DATA.runs[currentIndex];
+      const text = document.getElementById("feedback").value;
+
+      if (text.trim() === "") {
+        delete feedbackMap[run.id];
+      } else {
+        feedbackMap[run.id] = text;
+      }
+
+      // Build reviews array from map
+      const reviews = [];
+      for (const [run_id, feedback] of Object.entries(feedbackMap)) {
+        if (feedback.trim()) {
+          reviews.push({ run_id, feedback, timestamp: new Date().toISOString() });
+        }
+      }
+
+      fetch("/api/feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reviews, status: "in_progress" }),
+      }).then(() => {
+        document.getElementById("feedback-status").textContent = "Saved";
+      }).catch(() => {
+        // Static mode or server unavailable — no-op on auto-save,
+        // feedback will be downloaded on final submit
+        document.getElementById("feedback-status").textContent = "Will download on submit";
+      });
+    }
+
+    // ---- Done ----
+    function showDoneDialog() {
+      // Save current textarea to feedbackMap (but don't POST yet)
+      const run = EMBEDDED_DATA.runs[currentIndex];
+      const text = document.getElementById("feedback").value;
+      if (text.trim() === "") {
+        delete feedbackMap[run.id];
+      } else {
+        feedbackMap[run.id] = text;
+      }
+
+      // POST once with status: complete — include ALL runs so the model
+      // can distinguish "no feedback" (looks good) from "not reviewed"
+      const reviews = [];
+      const ts = new Date().toISOString();
+      for (const r of EMBEDDED_DATA.runs) {
+        reviews.push({ run_id: r.id, feedback: feedbackMap[r.id] || "", timestamp: ts });
+      }
+      const payload = JSON.stringify({ reviews, status: "complete" }, null, 2);
+      fetch("/api/feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: payload,
+      }).then(() => {
+        document.getElementById("done-overlay").classList.add("visible");
+      }).catch(() => {
+        // Server not available (static mode) — download as file
+        const blob = new Blob([payload], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "feedback.json";
+        a.click();
+        URL.revokeObjectURL(url);
+        document.getElementById("done-overlay").classList.add("visible");
+      });
+    }
+
+    function closeDoneDialog() {
+      // Reset status back to in_progress
+      saveCurrentFeedback();
+      document.getElementById("done-overlay").classList.remove("visible");
+    }
+
+    // ---- Toast ----
+    function showToast(message) {
+      const toast = document.getElementById("toast");
+      toast.textContent = message;
+      toast.classList.add("visible");
+      setTimeout(() => toast.classList.remove("visible"), 2000);
+    }
+
+    // ---- Keyboard nav ----
+    document.addEventListener("keydown", (e) => {
+      // Don't capture when typing in textarea
+      if (e.target.tagName === "TEXTAREA") return;
+
+      if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
+        e.preventDefault();
+        navigate(-1);
+      } else if (e.key === "ArrowRight" || e.key === "ArrowDown") {
+        e.preventDefault();
+        navigate(1);
+      }
+    });
+
+    // ---- Util ----
+    function getDownloadUri(file) {
+      if (file.data_uri) return file.data_uri;
+      if (file.data_b64) return "data:application/octet-stream;base64," + file.data_b64;
+      if (file.type === "text") return "data:text/plain;charset=utf-8," + encodeURIComponent(file.content);
+      return "#";
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement("div");
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // ---- View switching ----
+    function switchView(view) {
+      document.querySelectorAll(".view-tab").forEach(t => t.classList.remove("active"));
+      document.querySelectorAll(".view-panel").forEach(p => p.classList.remove("active"));
+      document.querySelector(`[onclick="switchView('${view}')"]`).classList.add("active");
+      document.getElementById("panel-" + view).classList.add("active");
+    }
+
+    // ---- Benchmark rendering ----
+    function renderBenchmark() {
+      const data = EMBEDDED_DATA.benchmark;
+      if (!data) return;
+
+      // Show the tabs
+      document.getElementById("view-tabs").style.display = "flex";
+
+      const container = document.getElementById("benchmark-content");
+      const summary = data.run_summary || {};
+      const metadata = data.metadata || {};
+      const notes = data.notes || [];
+
+      let html = "";
+
+      // Header
+      html += "<h2 style='font-family: Poppins, sans-serif; margin-bottom: 0.5rem;'>Benchmark Results</h2>";
+      html += "<p style='color: var(--text-muted); font-size: 0.875rem; margin-bottom: 1.25rem;'>";
+      if (metadata.skill_name) html += "<strong>" + escapeHtml(metadata.skill_name) + "</strong> &mdash; ";
+      if (metadata.timestamp) html += metadata.timestamp + " &mdash; ";
+      if (metadata.evals_run) html += "Evals: " + metadata.evals_run.join(", ") + " &mdash; ";
+      html += (metadata.runs_per_configuration || "?") + " runs per configuration";
+      html += "</p>";
+
+      // Summary table
+      html += '<table class="benchmark-table">';
+
+      function fmtStat(stat, pct) {
+        if (!stat) return "—";
+        const suffix = pct ? "%" : "";
+        const m = pct ? (stat.mean * 100).toFixed(0) : stat.mean.toFixed(1);
+        const s = pct ? (stat.stddev * 100).toFixed(0) : stat.stddev.toFixed(1);
+        return m + suffix + " ± " + s + suffix;
+      }
+
+      function deltaClass(val) {
+        if (!val) return "";
+        const n = parseFloat(val);
+        if (n > 0) return "benchmark-delta-positive";
+        if (n < 0) return "benchmark-delta-negative";
+        return "";
+      }
+
+      // Discover config names dynamically (everything except "delta")
+      const configs = Object.keys(summary).filter(k => k !== "delta");
+      const configA = configs[0] || "config_a";
+      const configB = configs[1] || "config_b";
+      const labelA = configA.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+      const labelB = configB.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+      const a = summary[configA] || {};
+      const b = summary[configB] || {};
+      const delta = summary.delta || {};
+
+      html += "<thead><tr><th>Metric</th><th>" + escapeHtml(labelA) + "</th><th>" + escapeHtml(labelB) + "</th><th>Delta</th></tr></thead>";
+      html += "<tbody>";
+
+      html += "<tr><td><strong>Pass Rate</strong></td>";
+      html += "<td>" + fmtStat(a.pass_rate, true) + "</td>";
+      html += "<td>" + fmtStat(b.pass_rate, true) + "</td>";
+      html += '<td class="' + deltaClass(delta.pass_rate) + '">' + (delta.pass_rate || "—") + "</td></tr>";
+
+      // Time (only show row if data exists)
+      if (a.time_seconds || b.time_seconds) {
+        html += "<tr><td><strong>Time (s)</strong></td>";
+        html += "<td>" + fmtStat(a.time_seconds, false) + "</td>";
+        html += "<td>" + fmtStat(b.time_seconds, false) + "</td>";
+        html += '<td class="' + deltaClass(delta.time_seconds) + '">' + (delta.time_seconds ? delta.time_seconds + "s" : "—") + "</td></tr>";
+      }
+
+      // Tokens (only show row if data exists)
+      if (a.tokens || b.tokens) {
+        html += "<tr><td><strong>Tokens</strong></td>";
+        html += "<td>" + fmtStat(a.tokens, false) + "</td>";
+        html += "<td>" + fmtStat(b.tokens, false) + "</td>";
+        html += '<td class="' + deltaClass(delta.tokens) + '">' + (delta.tokens || "—") + "</td></tr>";
+      }
+
+      html += "</tbody></table>";
+
+      // Per-eval breakdown (if runs data available)
+      const runs = data.runs || [];
+      if (runs.length > 0) {
+        const evalIds = [...new Set(runs.map(r => r.eval_id))].sort((a, b) => a - b);
+
+        html += "<h3 style='font-family: Poppins, sans-serif; margin-bottom: 0.75rem;'>Per-Eval Breakdown</h3>";
+
+        const hasTime = runs.some(r => r.result && r.result.time_seconds != null);
+        const hasErrors = runs.some(r => r.result && r.result.errors > 0);
+
+        for (const evalId of evalIds) {
+          const evalRuns = runs.filter(r => r.eval_id === evalId);
+          const evalName = evalRuns[0] && evalRuns[0].eval_name ? evalRuns[0].eval_name : "Eval " + evalId;
+
+          html += "<h4 style='font-family: Poppins, sans-serif; margin: 1rem 0 0.5rem; color: var(--text);'>" + escapeHtml(evalName) + "</h4>";
+          html += '<table class="benchmark-table">';
+          html += "<thead><tr><th>Config</th><th>Run</th><th>Pass Rate</th>";
+          if (hasTime) html += "<th>Time (s)</th>";
+          if (hasErrors) html += "<th>Crashes During Execution</th>";
+          html += "</tr></thead>";
+          html += "<tbody>";
+
+          // Group by config and render with average rows
+          const configGroups = [...new Set(evalRuns.map(r => r.configuration))];
+          for (let ci = 0; ci < configGroups.length; ci++) {
+            const config = configGroups[ci];
+            const configRuns = evalRuns.filter(r => r.configuration === config);
+            if (configRuns.length === 0) continue;
+
+            const rowClass = ci === 0 ? "benchmark-row-with" : "benchmark-row-without";
+            const configLabel = config.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+
+            for (const run of configRuns) {
+              const r = run.result || {};
+              const prClass = r.pass_rate >= 0.8 ? "benchmark-delta-positive" : r.pass_rate < 0.5 ? "benchmark-delta-negative" : "";
+              html += '<tr class="' + rowClass + '">';
+              html += "<td>" + configLabel + "</td>";
+              html += "<td>" + run.run_number + "</td>";
+              html += '<td class="' + prClass + '">' + ((r.pass_rate || 0) * 100).toFixed(0) + "% (" + (r.passed || 0) + "/" + (r.total || 0) + ")</td>";
+              if (hasTime) html += "<td>" + (r.time_seconds != null ? r.time_seconds.toFixed(1) : "—") + "</td>";
+              if (hasErrors) html += "<td>" + (r.errors || 0) + "</td>";
+              html += "</tr>";
+            }
+
+            // Average row
+            const rates = configRuns.map(r => (r.result || {}).pass_rate || 0);
+            const avgRate = rates.reduce((a, b) => a + b, 0) / rates.length;
+            const avgPrClass = avgRate >= 0.8 ? "benchmark-delta-positive" : avgRate < 0.5 ? "benchmark-delta-negative" : "";
+            html += '<tr class="benchmark-row-avg ' + rowClass + '">';
+            html += "<td>" + configLabel + "</td>";
+            html += "<td>Avg</td>";
+            html += '<td class="' + avgPrClass + '">' + (avgRate * 100).toFixed(0) + "%</td>";
+            if (hasTime) {
+              const times = configRuns.map(r => (r.result || {}).time_seconds).filter(t => t != null);
+              html += "<td>" + (times.length ? (times.reduce((a, b) => a + b, 0) / times.length).toFixed(1) : "—") + "</td>";
+            }
+            if (hasErrors) html += "<td></td>";
+            html += "</tr>";
+          }
+          html += "</tbody></table>";
+
+          // Per-assertion detail for this eval
+          const runsWithExpectations = {};
+          for (const config of configGroups) {
+            runsWithExpectations[config] = evalRuns.filter(r => r.configuration === config && r.expectations && r.expectations.length > 0);
+          }
+          const hasAnyExpectations = Object.values(runsWithExpectations).some(runs => runs.length > 0);
+          if (hasAnyExpectations) {
+            // Collect all unique assertion texts across all configs
+            const allAssertions = [];
+            const seen = new Set();
+            for (const config of configGroups) {
+              for (const run of runsWithExpectations[config]) {
+                for (const exp of (run.expectations || [])) {
+                  if (!seen.has(exp.text)) {
+                    seen.add(exp.text);
+                    allAssertions.push(exp.text);
+                  }
+                }
+              }
+            }
+
+            html += '<table class="benchmark-table" style="margin-top: 0.5rem;">';
+            html += "<thead><tr><th>Assertion</th>";
+            for (const config of configGroups) {
+              const label = config.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+              html += "<th>" + escapeHtml(label) + "</th>";
+            }
+            html += "</tr></thead><tbody>";
+
+            for (const assertionText of allAssertions) {
+              html += "<tr><td>" + escapeHtml(assertionText) + "</td>";
+
+              for (const config of configGroups) {
+                html += "<td>";
+                for (const run of runsWithExpectations[config]) {
+                  const exp = (run.expectations || []).find(e => e.text === assertionText);
+                  if (exp) {
+                    const cls = exp.passed ? "benchmark-delta-positive" : "benchmark-delta-negative";
+                    const icon = exp.passed ? "\u2713" : "\u2717";
+                    html += '<span class="' + cls + '" title="Run ' + run.run_number + ': ' + escapeHtml(exp.evidence || "") + '">' + icon + "</span> ";
+                  } else {
+                    html += "— ";
+                  }
+                }
+                html += "</td>";
+              }
+              html += "</tr>";
+            }
+            html += "</tbody></table>";
+          }
+        }
+      }
+
+      // Notes
+      if (notes.length > 0) {
+        html += '<div class="benchmark-notes">';
+        html += "<h3>Analysis Notes</h3>";
+        html += "<ul>";
+        for (const note of notes) {
+          html += "<li>" + escapeHtml(note) + "</li>";
+        }
+        html += "</ul></div>";
+      }
+
+      container.innerHTML = html;
+    }
+
+    // ---- Start ----
+    init();
+    renderBenchmark();
+  </script>
+</body>
+</html>

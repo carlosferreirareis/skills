@@ -38,7 +38,7 @@ skills/
 3. Adicione a skill à tabela abaixo.
 4. Commit e push.
 
-Dica: use a skill `skill-creator` do Claude Code para gerar, revisar e testar (`eval`) a skill antes de finalizar.
+Dica: use a skill `skill-creator` do Claude Code para gerar, revisar e testar (`eval`) a skill antes de finalizar. Cada skill deste repo guarda em `evals/review-iteration-N.html` o relatório comparativo (com/sem a skill) gerado nesse processo — abra um no navegador para ver um exemplo de como funciona o teste antes de criar o seu.
 
 ## Como adicionar um fork
 
