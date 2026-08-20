@@ -1,6 +1,6 @@
-# Mapeamento: qual skill usar em cada etapa do anúncio
+# Mapeamento: qual skill usar em cada etapa do anúncio e do fechamento
 
-Este documento mapeia, com justificativa, qual das três skills de copywriting deste repositório é mais forte para cada etapa de uma peça de vendas curta (anúncio, carrossel, VSL) — **gancho**, **desenvolvimento** e **CTA**. É um complemento ao [`exemplo-prompt-anuncios.md`](exemplo-prompt-anuncios.md): aquele arquivo dá o prompt pronto para usar; este explica o "porquê" por trás de como as skills se combinam.
+Este documento mapeia, com justificativa, qual das três skills de copywriting deste repositório é mais forte para cada etapa de uma peça de vendas curta (anúncio, carrossel, VSL) — **gancho**, **desenvolvimento** e **CTA** — e também para o **fechamento em conversa 1:1** (ex.: WhatsApp), que é um caso de uso diferente. É um complemento ao [`exemplo-prompt-anuncios.md`](exemplo-prompt-anuncios.md): aquele arquivo dá o prompt pronto para usar; este explica o "porquê" por trás de como as skills se combinam.
 
 Skills envolvidas:
 - [`copywriter-brasileiro`](copywriter-brasileiro/) — caixa de ferramentas geral (persona, benefícios, headline, banco de palavras, estrutura completa de carta de vendas).
@@ -42,6 +42,34 @@ Pergunta 9 (oferta irresistível — lacuna de valor, bônus S.I.N., escada de v
 `copywriter-brasileiro` também cobre fechamento (falso fechamento, PS, garantia, ancoragem de preço, em `references/06-estrutura-carta-de-vendas.md`) — não é dispensável, principalmente pro PS, que a outra skill trata só de leve.
 
 **Na prática:** estruture a oferta e o fechamento com `carta-de-vendas-16-palavras`, e use `copywriter-brasileiro` pra escrever o PS final e reforçar a garantia.
+
+## 4. Fechamento por WhatsApp (conversa 1:1) → combinação de `carta-de-vendas-16-palavras` + `copywriter-brasileiro`
+
+Esse é um caso de uso diferente dos três acima: o anúncio já fez o trabalho de atrair o clique, e agora é uma **conversa em tempo real** com um lead já aquecido, respondendo objeções reais conforme elas aparecem. Nenhuma das três skills foi desenhada para "conversar" — mas duas delas têm exatamente o conteúdo certo para virar um **roteiro/playbook de objeções** que você usa como apoio ao vivo.
+
+**`carta-de-vendas-16-palavras` é a mais forte aqui**, porque as Perguntas 3-10 são, na prática, as objeções que o cliente tem na cabeça enquanto troca mensagem com você:
+
+- **Pergunta 3** ("como sei que é verdade?") → cliente pedindo prova, exemplo, referência.
+- **Pergunta 4** ("por que não teve sucesso antes?") → cliente cético porque já tentou outro site/freelancer e não deu certo — a fórmula de tirar a culpa dele (não foi burrice, foi o mecanismo errado) funciona muito bem numa resposta de WhatsApp.
+- **Pergunta 6** ("por que agora?") → cliente enrolando pra decidir — use urgência real, nunca genérica.
+- **Pergunta 7** ("por que confiar em você?") → cliente pedindo portfólio/prova social — é aqui que os sites de demonstração e os vídeos de prova entram na conversa (fora do anúncio, como você já definiu).
+- **Pergunta 9** (oferta irresistível) → como apresentar preço, bônus e os order bumps sem soar empurrado.
+- **Pergunta 10** (push-pull) → a técnica mais aplicável a chat ao vivo: nunca parecer desesperado, devolver o controle ("talvez não seja pra você agora, sem problema"), e reforçar o que ele perde se não decidir — isso funciona muito bem em mensagens reais de WhatsApp, onde soar carente mata a venda na hora.
+- Use o checklist de diagnóstico (`references/05-checklist-e-processo.md`) como um roteiro de "qual pergunta ainda não foi respondida" sempre que a conversa travar ou o cliente sumir.
+
+**`copywriter-brasileiro` entra com as ferramentas mais específicas de objeção e tom de conversa:**
+
+- Quebra de objeções — regra central: **objeção é sempre racional, nunca emocional**, então responda com lógica, não com mais gatilho emocional (`references/06-estrutura-carta-de-vendas.md`).
+- Ancoragem de preço e garantia — úteis quando o cliente pergunta "por que R$ 600 (ou € 97)?" ou "e se eu não gostar?".
+- Tom de voz íntimo e técnicas de conexão pessoal (`references/02-persona-e-nucleo-emocional.md`) — combinam bem com o tom natural de uma conversa de WhatsApp (1ª pessoa, empatia, "calçar os sapatos do prospecto"), diferente do tom mais "publicitário" que às vezes cabe num anúncio.
+
+**`headlines-lendarias` não se aplica à conversa em si** — só tem um papel pequeno: pode ajudar a escrever a primeira mensagem de resposta automática (o gatilho que mantém o lead engajado nos primeiros segundos depois de mandar a mensagem), que ainda funciona como um mini-gancho antes da conversa de verdade começar.
+
+### Veredito prático
+
+Peça pra `carta-de-vendas-16-palavras` gerar, a partir do One Belief da sua oferta, um roteiro de respostas prontas para as objeções mais prováveis — uma por pergunta, 3 a 10 — e peça pra `copywriter-brasileiro` revisar o tom de cada resposta pra soar como conversa de WhatsApp de verdade, não copy de anúncio colado. O resultado não é uma peça de copy única — é um **playbook de conversa**: mensagem de abertura + resposta padrão pra cada objeção comum + fechamento com push-pull. Você usa esse playbook como apoio ao vivo, adaptando à fala real de cada cliente, não como script decorado palavra por palavra.
+
+Nenhuma das três skills foi desenhada para responder em tempo real dentro do WhatsApp por conta própria — pra isso, o ideal é usar essa combinação pra **montar o roteiro com antecedência**, e não esperar que uma skill "converse" no seu lugar durante o atendimento.
 
 ## Sequência recomendada pra um anúncio completo
 
