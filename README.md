@@ -34,9 +34,10 @@ skills/
 ## Como adicionar uma skill nova (criada por mim)
 
 1. Copie `templates/skill-template/` para `skills/<nome-da-skill>/`.
-2. Preencha o `SKILL.md` (frontmatter + instruções).
-3. Adicione a skill à tabela abaixo.
-4. Commit e push.
+2. Preencha o `SKILL.md` (frontmatter + instruções) — o `description` precisa ser YAML válido: se tiver aspas ou dois-pontos no meio do texto, envolva o valor inteiro em aspas simples (`description: 'texto com "aspas" e dois-pontos: assim'`), senão instaladores de terceiros como o `npx skills` quebram ao ler.
+3. Preencha o `README.md` (nome, descrição curta, comando `npx skills add`) — é o que aparece automaticamente quando alguém abre a pasta da skill no GitHub; o `SKILL.md` não é renderizado.
+4. Adicione a skill à tabela abaixo.
+5. Commit e push.
 
 Dica: use a skill `skill-creator` do Claude Code para gerar, revisar e testar (`eval`) a skill antes de finalizar. Cada skill deste repo guarda em `evals/review-iteration-N.html` o relatório comparativo (com/sem a skill) gerado nesse processo — abra um no navegador para ver um exemplo de como funciona o teste antes de criar o seu.
 
@@ -69,6 +70,16 @@ Dica: use a skill `skill-creator` do Claude Code para gerar, revisar e testar (`
 - [`skills/exemplo-prompt-anuncios.md`](skills/exemplo-prompt-anuncios.md) — prompt genérico com placeholders para gerar anúncios de conversão (headlines, carrosséis, texto de anúncio, roteiros) combinando as skills `copywriter-brasileiro`, `carta-de-vendas-16-palavras` e `headlines-lendarias` para qualquer negócio/produto.
 - [`skills/mapeamento-skills-copywriting.md`](skills/mapeamento-skills-copywriting.md) — qual dessas três skills é mais forte para escrever o gancho, o desenvolvimento e o CTA de uma peça, e como combiná-las.
 
-## Uso nos projetos
+## Como instalar e usar
 
-Para usar uma skill de um projeto, copie a pasta da skill (`skills/<nome>/` ou `forks/<nome>/`) para o diretório de skills do projeto de destino (ex.: `.claude/skills/`), ou consulte a documentação do Claude Code sobre como referenciar skills externas.
+Forma recomendada — [`npx skills`](https://github.com/vercel-labs/skills) (instala e faz symlink pro Claude Code automaticamente):
+
+```bash
+# uma skill específica
+npx skills add carlosferreirareis/skills --skill copywriter-brasileiro
+
+# todas de uma vez
+npx skills add carlosferreirareis/skills --all
+```
+
+Alternativa manual (sem depender do `npx skills`): copie a pasta da skill (`skills/<nome>/` ou `forks/<nome>/`) para `~/.claude/skills/<nome>/` (uso pessoal, todos os projetos) ou `.claude/skills/<nome>/` dentro de um projeto específico.
