@@ -67,6 +67,7 @@ Dica: use a skill `skill-creator` do Claude Code para gerar, revisar e testar (`
 ## Exemplos de prompts
 
 - [`skills/exemplo-prompt-anuncios.md`](skills/exemplo-prompt-anuncios.md) — prompt genérico com placeholders para gerar anúncios de conversão (headlines, carrosséis, texto de anúncio, roteiros) combinando as skills `copywriter-brasileiro`, `carta-de-vendas-16-palavras` e `headlines-lendarias` para qualquer negócio/produto.
+- [`skills/mapeamento-skills-copywriting.md`](skills/mapeamento-skills-copywriting.md) — qual dessas três skills é mais forte para escrever o gancho, o desenvolvimento e o CTA de uma peça, e como combiná-las.
 
 ## Uso nos projetos
 

@@ -8,6 +8,8 @@ Este arquivo é um **exemplo de prompt reutilizável** — não é uma skill, é
 
 O prompt abaixo foi generalizado a partir de um caso real (venda de sites institucionais, oferta com upsell e order bumps, dois mercados diferentes). Copie o bloco, preencha os placeholders `[ENTRE_COLCHETES]` com as informações do seu negócio e cole numa sessão do Claude Code com acesso a essas três skills. Se você não tiver alguma informação na hora, **deixe o placeholder como está ou apague a linha** — o próprio prompt instrui o Claude a perguntar antes de inventar qualquer coisa sobre o seu negócio.
 
+Veja também [`mapeamento-skills-copywriting.md`](mapeamento-skills-copywriting.md) — explica qual dessas três skills é mais forte para o gancho, o desenvolvimento e o CTA, e por quê.
+
 ---
 
 ## O prompt
